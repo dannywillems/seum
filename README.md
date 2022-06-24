@@ -1,7 +1,3 @@
-# seum
-
-OCaml DSL and tool to write and compare programs in assembly, in a typed and "safe" fashion way. Why? Because I have "le seum" to write them.
-
 Seum
 =====
 
