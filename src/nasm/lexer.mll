@@ -193,21 +193,33 @@ rule prog = parse
       empty_line := false;
       Parser.HEX_STRING ident
     }
-  | extern { print_endline "extern "; Parser.EXTERN }
-  | global { print_endline "Found global "; Parser.GLOBAL }
-  | section { print_endline "Found section "; Parser.SECTION }
-  | label_name as ident {
-    printf "Label/instr found: %s\n" ident;
+  | extern {
+    empty_line := false;
+    print_endline "extern "; Parser.EXTERN
+  }
+  | global {
+    empty_line := false;
+    print_endline "Found global "; Parser.GLOBAL
+  }
+  | section {
+    empty_line := false;
+    print_endline "Found section "; Parser.SECTION
+  }
+  | ".bss" | ".data" | ".text" as ident {
+    empty_line := false;
+    Parser.SECTION_NAME ident
+  }
+  | label_name as lbl {
+    printf "Label found: %s\n" lbl ;
       (* https://www.nasm.us/xdoc/2.11.08/html/nasmdoc3.html
          > Maximum length of an identifier is 4095 characters.
       *)
       (* let label_length = String.length ident in *)
       (* if label_length > max_label_length then raise (LabelTooLong label_length) *)
       (* else ( *)
-        empty_line := false;
-        Parser.ID ident
-      (* ) *)
-    }
+    empty_line := false;
+    Parser.LABEL lbl
+  }
 
   (* | integer as n { Parser.INTEGER (int_of_string n) } *)
   | _ as l {

@@ -20,6 +20,8 @@
 %token DOLLAR
 %token EOF
 %token <string> ID
+%token <string> SECTION_NAME
+%token <string> LABEL
 (* Might require to be more specific depending on the allowed size *)
 %token <int> INTEGER
 %token <string> STRING
@@ -41,21 +43,21 @@
 nasm_line:
 | EOF { raise End_of_file }
 | EXTERN ;
-  label = ID ;
+  label = LABEL ;
   NEW_LINE {
       let ret = Nasm_untyped_syntax.Extern label in
       print_endline (Nasm_untyped_syntax.string_of_line ret);
       ret
     }
 | GLOBAL ;
-  label = ID ;
+  label = LABEL ;
   NEW_LINE {
       let ret = Nasm_untyped_syntax.Global label in
       print_endline (Nasm_untyped_syntax.string_of_line ret);
       ret
     }
 | SECTION ;
-  section_name = ID ;
+  section_name = SECTION_NAME ;
   NEW_LINE {
       let ret =
         if String.equal section_name ".bss"
@@ -69,7 +71,7 @@ nasm_line:
       print_endline (Nasm_untyped_syntax.string_of_line ret);
       ret
     }
-| label_opt = option(ID) ;
+| label_opt = option(LABEL) ;
   instr = instruction ;
   ops = separated_list(COMMA, operand) ;
   NEW_LINE {
@@ -82,7 +84,7 @@ nasm_line:
       ret
 
     }
-| label = ID ;
+| label = LABEL ;
   COLON ;
   option(NEW_LINE) ;
   instr = instruction ;
@@ -113,7 +115,7 @@ address:
 | a = HEX_STRING {
             Nasm_untyped_syntax.Raw a
           }
-| lbl = ID {
+| lbl = LABEL {
           Nasm_untyped_syntax.Label lbl
         }
 | DOLLAR {
@@ -126,6 +128,6 @@ operand:
 | int = INTEGER { printf "Parser op/int: %d\n" int ; Nasm_untyped_syntax.Int int }
 | hex = HEX_STRING { printf "Parser op/hex: %s\n" hex ; Nasm_untyped_syntax.Hex hex }
 | f = FLOAT { printf "Parser op/float: %f\n" f ; Nasm_untyped_syntax.Float f }
-| op = ID { printf "Parser op/ID: %s\n" op ; Nasm_untyped_syntax.String op }
+| op = LABEL { printf "Parser op/label: %s\n" op ; Nasm_untyped_syntax.String op }
 | op = STRING { let op = Printf.sprintf "\"%s\"" op in Nasm_untyped_syntax.String op }
 | addr = address { Nasm_untyped_syntax.Address addr }
