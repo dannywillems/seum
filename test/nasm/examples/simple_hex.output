@@ -1,0 +1,2 @@
+label: mov eax, 0x10
+label: mov ebx, 0x1af3230dff

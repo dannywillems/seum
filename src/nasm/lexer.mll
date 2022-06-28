@@ -94,8 +94,13 @@ let register_names = x86_16bits_register_names | x86_32bits_register_names | x86
 let instructions =
   "push" | "mov" | "xor" | "xor" | "inc" | "call" | "ret" | "pop" | "jnz" | "add" | "dec"
 
-let declaration_directives =
-  "db" | "dw" | "dd" | "dq" | "ddq" | "dt" | "do"
+(* Pseudo-instructions are things which, though not real x86 machine
+   instructions, are used in the instruction field anyway because that's the most
+   convenient place to put them. *)
+let pseudo_instructions =
+  "db" | "dw" | "dd" | "dq" | "ddq" | "dt" | "do" |
+  "resb" | "resw" | "resd" | "resq" | "rest" | "reso" | "resy" |
+  "incbin" | "equ" | "times"
 
 let section = "section" | "segment"
 let extern = "extern"
@@ -143,9 +148,8 @@ rule prog = parse
       empty_line := false;
       Parser.REGISTER ident
     }
-  (* nasm interprets declaration directives as instructions *)
-  | instructions | declaration_directives as ident {
-      printf "INSTRUCTION: %s\n" ident;
+  | instructions | pseudo_instructions as ident {
+      printf "(PSEUDO-)INSTRUCTION: %s\n" ident;
       empty_line := false;
       Parser.INSTRUCTION ident
     }
@@ -158,6 +162,10 @@ rule prog = parse
   | floats as ident {
       empty_line := false;
       Parser.FLOAT (float_of_string ident)
+    }
+  | hex_integers as ident {
+      empty_line := false;
+      Parser.HEX_STRING ident
     }
   | extern { print_endline "extern "; Parser.EXTERN }
   | global { print_endline "Found global "; Parser.GLOBAL }

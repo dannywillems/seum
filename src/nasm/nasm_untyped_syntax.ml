@@ -11,12 +11,14 @@ type operand =
   | Int of int
   | Register of register
   | String of string
+  | Hex of string
 
 let string_of_operand = function
   | Float f -> string_of_float f
   | Int i -> string_of_int i
   | Register r -> r
   | String s -> s
+  | Hex s -> s
 
 type section = Bss | Data | Text
 

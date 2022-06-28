@@ -15,7 +15,6 @@
 %token COLON
 %token EOF
 %token <string> ID
-%token <string> LABEL
 (* Might require to be more specific depending on the allowed size *)
 %token <int> INTEGER
 %token <string> STRING
@@ -28,6 +27,7 @@
 (* TODO: split register in 64BITS, 32BITS, etc *)
 %token <string> REGISTER
 %token <float> FLOAT
+%token <string> HEX_STRING
 
 %start < Nasm_untyped_syntax.line > nasm_line
 
@@ -92,6 +92,7 @@ instruction:
 operand:
 | reg_name = REGISTER { Nasm_untyped_syntax.Register reg_name }
 | int = INTEGER { printf "Parser op/int: %d\n" int ; Nasm_untyped_syntax.Int int }
-| f = FLOAT { Nasm_untyped_syntax.Float f }
-| op = ID { printf "Parser op/ID: %s\n" op; Nasm_untyped_syntax.String op }
+| hex = HEX_STRING { printf "Parser op/hex: %s\n" hex ; Nasm_untyped_syntax.Hex hex }
+| f = FLOAT { printf "Parser op/float: %f\n" f ; Nasm_untyped_syntax.Float f }
+| op = ID { printf "Parser op/ID: %s\n" op ; Nasm_untyped_syntax.String op }
 | op = STRING { let op = Printf.sprintf "\"%s\"" op in Nasm_untyped_syntax.String op }

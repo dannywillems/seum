@@ -3,6 +3,7 @@ let test_names =
     "simple_with_comments";
     "fibonacci";
     "multiple_lines";
+    "simple_hex";
     "simple_without_label" ]
 
 let check_parser test_name () =
