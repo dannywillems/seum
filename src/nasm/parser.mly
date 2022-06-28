@@ -13,14 +13,9 @@
 
 %token COMMA
 %token COLON
-(* %token DOT *)
 %token EOF
 %token <string> ID
 %token <string> LABEL
-(* Not using it for the moment because the lexer cannot differentiate with the
-   labels. A check must be done at runtime.
-*)
-(* %token <string> INSTRUCTION *)
 (* Might require to be more specific depending on the allowed size *)
 %token <int> INTEGER
 %token <string> STRING
@@ -28,9 +23,8 @@
 %token GLOBAL
 %token EXTERN
 %token <string> INSTRUCTION
-(* %token PERCENT *)
 %token NEW_LINE
-(* For operands *)
+
 (* TODO: split register in 64BITS, 32BITS, etc *)
 %token <string> REGISTER
 %token <float> FLOAT
@@ -99,6 +93,5 @@ operand:
 | reg_name = REGISTER { Nasm_untyped_syntax.Register reg_name }
 | int = INTEGER { printf "Parser op/int: %d\n" int ; Nasm_untyped_syntax.Int int }
 | f = FLOAT { Nasm_untyped_syntax.Float f }
-(* | lbl = LABEL { lbl } *)
 | op = ID { printf "Parser op/ID: %s\n" op; Nasm_untyped_syntax.String op }
 | op = STRING { let op = Printf.sprintf "\"%s\"" op in Nasm_untyped_syntax.String op }
