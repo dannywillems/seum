@@ -6,12 +6,31 @@ type instruction = string
 
 type register = string
 
+type address =
+  | Current
+  | Add of address * address
+  | Sub of address * address
+  | R of register
+  | Raw of string
+  | Label of label
+
+let rec string_of_address = function
+  | Current -> "$"
+  | Add (x, y) ->
+      Printf.sprintf "(%s + %s)" (string_of_address x) (string_of_address y)
+  | Sub (x, y) ->
+      Printf.sprintf "(%s - %s)" (string_of_address x) (string_of_address y)
+  | R r -> r
+  | Raw a -> a
+  | Label l -> l
+
 type operand =
   | Float of float
   | Int of int
   | Register of register
   | String of string
   | Hex of string
+  | Address of address
 
 let string_of_operand = function
   | Float f -> string_of_float f
@@ -19,6 +38,7 @@ let string_of_operand = function
   | Register r -> r
   | String s -> s
   | Hex s -> s
+  | Address a -> string_of_address a
 
 type section = Bss | Data | Text
 

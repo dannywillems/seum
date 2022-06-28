@@ -3,6 +3,7 @@ let test_names =
     "simple_with_comments";
     "operand_string_single_quote";
     "fibonacci";
+    "hello_world";
     "multiple_lines";
     "simple_hex";
     "simple_without_label" ]

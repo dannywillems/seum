@@ -1,0 +1,30 @@
+  ;; For syscalls, see https://en.wikibooks.org/wiki/X86_Assembly/Interfacing_with_Linux
+  ;; To compile:
+  ;; > nasm -f elf64 -o hello_world.o hello_world.s
+  ;; > ld -o hello_world hello_world.o
+  ;; > ./hello_world
+  ;; ------------------
+  ;; From https://cs.lmu.edu/~ray/notes/nasmtutorial/
+  ;; NASM is line-based. Most programs consists of *directives*, followed by one
+  ;; or more *sections*. Lines can have an optional *label*. Most lines have an
+  ;; *instruction* followed by zero or more operands
+
+  ;; Text section
+  global _start
+  section .text
+_start:
+  mov edx, len                    ; length of the message
+  mov ecx, msg                    ; third parameter of write, the message
+  mov ebx, 0                      ; stdout
+  mov eax, 4                      ; syscall "write" is 4
+  int 0x80                        ; interrupt and call the device
+  mov eax, 1                      ; syscall exit is 1
+  mov ebx, 0                      ; exit parameter to 0
+  int 0x80
+
+  ;; Data section
+  section .data
+  ;; variable declaration
+  ;; SYMBOL TYPE VALUE
+msg db 'Hello, world', 0xa
+len equ $-msg

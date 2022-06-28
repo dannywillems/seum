@@ -57,6 +57,11 @@ let white = [' ' '\t' '\r']
 let newline = ['\n']
 let newlines = newline+
 
+let dollar = '$'
+let left_paren = '('
+let right_paren = ')'
+let plus = '+'
+let minus = '-'
 let alpha = ['a'-'z' 'A' - 'Z']
 let alpha_capitalize = ['A' - 'Z']
 let alpha_num = ['A' - 'Z' 'a' - 'z' '0' - '9']
@@ -92,7 +97,8 @@ let x86_8bits_register_names = "ah" | "al" | "bl" | "bh" | "ch" | "cl" | "dh" | 
 let register_names = x86_16bits_register_names | x86_32bits_register_names | x86_64bits_register_names | x86_8bits_register_names
 
 let instructions =
-  "push" | "mov" | "xor" | "xor" | "inc" | "call" | "ret" | "pop" | "jnz" | "add" | "dec"
+  "push" | "mov" | "xor" | "xor" | "inc" | "call" | "ret" | "pop" | "jnz" |
+  "add" | "dec" | "int"
 
 (* Pseudo-instructions are things which, though not real x86 machine
    instructions, are used in the instruction field anyway because that's the most
@@ -137,6 +143,26 @@ rule prog = parse
       empty_line := false;
       Parser.COLON
     }
+  | minus {
+      empty_line := false;
+      Parser.MINUS
+    }
+  | plus {
+    empty_line := false;
+    Parser.PLUS
+  }
+  | left_paren {
+    empty_line := false;
+    Parser.LEFT_PAREN
+  }
+  | right_paren {
+    empty_line := false;
+    Parser.RIGHT_PAREN
+  }
+  | dollar {
+    empty_line := false;
+    Parser.DOLLAR
+  }
   | "," {
       print_endline "COMMA";
       empty_line := false;

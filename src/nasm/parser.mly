@@ -13,6 +13,11 @@
 
 %token COMMA
 %token COLON
+%token LEFT_PAREN
+%token RIGHT_PAREN
+%token PLUS
+%token MINUS
+%token DOLLAR
 %token EOF
 %token <string> ID
 (* Might require to be more specific depending on the allowed size *)
@@ -88,6 +93,30 @@ nasm_line:
 instruction:
 | instr = INSTRUCTION { instr }
 
+address:
+| add1 = address ;
+  MINUS ;
+  add2 = address {
+             Nasm_untyped_syntax.Sub (add1, add2)
+           }
+| add1 = address ;
+  PLUS ;
+  add2 = address {
+             Nasm_untyped_syntax.Add (add1, add2)
+           }
+| reg = REGISTER {
+             Nasm_untyped_syntax.R reg
+           }
+| a = HEX_STRING {
+            Nasm_untyped_syntax.Raw a
+          }
+| lbl = ID {
+          Nasm_untyped_syntax.Label lbl
+        }
+| DOLLAR {
+  Nasm_untyped_syntax.Current
+}
+
 (* TODO: add hex integers *)
 operand:
 | reg_name = REGISTER { Nasm_untyped_syntax.Register reg_name }
@@ -96,3 +125,4 @@ operand:
 | f = FLOAT { printf "Parser op/float: %f\n" f ; Nasm_untyped_syntax.Float f }
 | op = ID { printf "Parser op/ID: %s\n" op ; Nasm_untyped_syntax.String op }
 | op = STRING { let op = Printf.sprintf "\"%s\"" op in Nasm_untyped_syntax.String op }
+| addr = address { Nasm_untyped_syntax.Address addr }
