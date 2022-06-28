@@ -1,0 +1,172 @@
+# Testing on multiple platforms and Caml version, but some jobs can share the
+# _opam and _build directory.
+variables:
+  IMAGE_WITH_CACHE: "ocaml/opam:debian-testing-opam"
+  OCAML_COMPILER: "4.14.0"
+  # A workaround against a bug in gitlab-runner's default
+  # unzipping implementation, which partially breaks caching for the dune _build cache.
+  # See https://gitlab.com/gitlab-org/gitlab-runner/-/issues/27496 for more details.
+  FF_USE_FASTZIP: "true"
+
+.job-with-cache: &job_with_cache
+  image: ${IMAGE_WITH_CACHE}
+  cache:
+    # Make the cache unique per commit
+    key: opam-cache-$CI_COMMIT_SHORT_SHA
+    paths:
+      - _build
+      - _opam
+
+stages:
+  - lint
+  - build
+  - test-debian
+  - test-alpine
+  - install
+  - doc
+
+lint:
+  stage: lint
+  image: ocaml/opam:debian-ocaml-4.14
+  before_script:
+    - opam install ocamlformat.0.22.4
+  script:
+    - dune build @fmt
+  rules:
+    - when: always
+
+# Build pipeline for debian
+# Keep it close to the one for other distributions
+.build-test-debian: &build_definition_debian
+  stage: test-debian
+  before_script:
+    # Always update system package manager + setup OPAM env
+    - sudo apt-get update
+    - eval $(opam env)
+    - opam update
+
+    # List versions and environments
+    - ocaml --version
+    - opam --version
+    - cc --version
+    - echo $OPAM_SWITCH_PREFIX
+  script:
+    - opam install depext --yes
+    - opam install . --dry-run --deps-only --locked --with-test --with-doc --yes | awk '/-> installed/{print $3}' | xargs opam depext -iy
+    # For benchmark repository
+    - dune build
+    - dune build @install
+    - dune build @runtest
+  rules:
+    - when: always
+
+build-ocaml-4.14-debian-10:
+  <<: *build_definition_debian
+  image: ocaml/opam:debian-10-ocaml-4.14
+
+build-ocaml-4.14-debian-11:
+  <<: *build_definition_debian
+  image: ocaml/opam:debian-11-ocaml-4.14
+
+# Build and use cache. Useful for other jobs not related to testing.
+# Does not run any test
+build:
+  <<: *job_with_cache
+  stage: build
+  before_script:
+    # Always update system package manager + setup OPAM env
+    - sudo apt-get update
+    - "[ -d _opam ] || opam switch create --yes --no-install . $OCAML_COMPILER"
+    - eval $(opam env)
+    - opam update
+    # List versions and environments
+    - ocaml --version
+    - opam --version
+    - cc --version
+    - echo $OPAM_SWITCH_PREFIX
+  script:
+    - opam install depext --yes
+    - opam install . --dry-run --deps-only --locked --with-test --with-doc --yes | awk '/-> installed/{print $3}' | xargs opam depext -iy
+    # For benchmark repository. Not included in opam deps
+    - dune build
+  rules:
+    - when: always
+
+# Build pipeline for alpine
+.build-test-alpine: &build_definition_alpine
+  stage: test-alpine
+  before_script:
+    # Always update system package manager + setup OPAM env
+    - eval $(opam env)
+    - opam update
+    # List versions and environments
+    - ocaml --version
+    - opam --version
+    - cc --version
+    - echo $OPAM_SWITCH_PREFIX
+  script:
+    - opam install depext --yes
+    - opam install . --dry-run --deps-only --locked --with-test --with-doc --yes | awk '/-> installed/{print $3}' | xargs opam depext -iy
+    - dune build @install
+    - dune build @runtest
+  rules:
+    - when: always
+
+build-ocaml-4.14-alpine-3.14:
+  <<: *build_definition_alpine
+  image: ocaml/opam:alpine-3.14-ocaml-4.14
+
+build-ocaml-4.14-alpine-3.15:
+  <<: *build_definition_alpine
+  image: ocaml/opam:alpine-3.15-ocaml-4.14
+
+opam-install-and-remove:
+  stage: install
+  image: ocaml/opam:debian-ocaml-4.14
+  before_script:
+    # List versions and environments
+    - ocaml --version
+    - opam --version
+    - cc --version
+    - echo $OPAM_SWITCH_PREFIX
+    - opam repository set-url default https://opam.ocaml.org
+    - opam update
+  script:
+    - opam pin add seum.dev . --no-action
+    - opam pin add nasm.dev . --no-action
+    - opam depext seum.dev -i -y -v
+    - opam depext nasm.dev -i -y -v
+    - opam install seum.dev -y -v --deps-only
+    - opam install nasm.dev -y -v --deps-only
+    - opam install seum.dev -y -v
+    - opam install nasm.dev -y -v
+    - opam remove -a -y seum.dev
+    - opam remove -a -y nasm.dev
+  rules:
+    - when: always
+
+doc:
+  <<: *job_with_cache
+  stage: doc
+  before_script:
+    - eval $(opam env)
+    - opam install odoc -y
+  script:
+    - dune build @doc
+    - cp -r _build/default/_doc/_html _odoc/
+  artifacts:
+    paths:
+      - _odoc
+  rules:
+    - when: always
+
+pages:
+  <<: *job_with_cache
+  stage: deploy
+  script:
+    - cp -r _odoc public/
+  artifacts:
+    paths:
+      - public
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
