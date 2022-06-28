@@ -1,0 +1,5 @@
+(tests
+ (names main)
+ (deps
+  (source_tree examples))
+ (libraries nasm alcotest))

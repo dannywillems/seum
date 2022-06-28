@@ -1,0 +1,14 @@
+(menhir
+ (flags --explain)
+ (modules parser))
+
+(ocamllex lexer)
+
+(library
+ (name nasm)
+ (modules nasm parser lexer nasm_untyped_syntax))
+
+(executable
+ (name nasm_ex)
+ (modules nasm_ex)
+ (libraries nasm))

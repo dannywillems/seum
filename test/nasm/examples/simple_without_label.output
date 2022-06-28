@@ -1,0 +1,4 @@
+label: mov eax, eax
+  mov eax, eax
+  mov eax, eax
+  push eax

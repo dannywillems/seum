@@ -1,0 +1,16 @@
+opam-version: "2.0"
+authors: [ "Danny Willems <be.danny.willems@gmail.com>" ]
+maintainer: [ "Danny Willems <be.danny.willems@gmail.com>" ]
+synopsis: "OCaml DSL and tool to write and compare programs in assembly in a typed and 'safe' fashion way"
+homepage: "https://gitlab.com/dannywillems/seum"
+dev-repo: "git+https://gitlab.com/dannywillems/seum.git"
+bug-reports: "https://gitlab.com/dannywillems/seum/issues"
+license: "MIT"
+depends: [
+  "ocaml" {>= "4.14"}
+  "integers"
+  "dune" {>= "3.0.0"}
+  "alcotest" {with-test}
+]
+build: [[ "dune" "build" "-j" jobs "-p" name "@install" ]]
+run-test: [[ "dune" "runtest" "-p" name "-j" jobs ]]

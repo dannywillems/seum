@@ -1,0 +1,7 @@
+label:
+  mov eax, eax
+  mov eax, ebx
+if:
+  mov eax, eax
+else:
+  mov eax, eax

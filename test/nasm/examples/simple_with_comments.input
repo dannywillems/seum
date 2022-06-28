@@ -1,0 +1,3 @@
+; Must be ignored
+label: mov eax, eax ; Must be ignored
+; Must be ignored

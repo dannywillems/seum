@@ -1,0 +1,4 @@
+(library
+ (name seum)
+ (public_name seum)
+ (libraries integers))

@@ -1,0 +1,42 @@
+  ;; Compute the first 90 values of the fibonacci sequence
+  global main
+  extern printf
+  section .text
+main:
+  push rbx                      ; save rbx register on the stack
+  mov ecx, 10
+  xor rax, rax                  ; we clean rax register, set to 0
+  xor rbx, rbx                  ; we clean rbx register, set to 0
+  inc rbx                       ; we start the fibonacci sequence to 1
+print:
+  push rax                      ; save rax (caller save register)
+  push rcx                      ; save rcx
+  ;; We prepare the parameters to call printf
+  mov rdi,  format              ; first parameter of printf, remember call conventions
+  mov rsi,  rax                 ; second parameter in rsi, remember call conventions
+  ;; clear rax, in case of printf uses rax, but not sure it makes sense. It
+  ;; is though in the tutorial
+  xor rax, rax
+  call printf WRT ..plt
+
+  ;; restoring caller-save registers, inverted order than push's instructions
+  ;; because of stack
+  pop rcx
+  pop rax
+
+  ;; Now we compute the next value of the fibonacci sequence. rax will contain the value
+  ;; N, and rbx the N + 1
+  ;; We save the N value in rdx to add to rbx later
+  mov rdx, rax
+  ;; N + 1 -> N
+  mov rax, rbx
+  ;; F_(N + 1) + F_N -> N + 1 (rbx)
+  add rbx, rdx
+  dec ecx
+  jnz print
+
+  pop rbx
+  ret
+  section .data
+  format db "%20ld", 10, 0
+  n dw 0x10
