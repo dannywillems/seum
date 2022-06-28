@@ -1,6 +1,7 @@
 let test_names =
   [ "simple";
     "simple_with_comments";
+    "operand_string_single_quote";
     "fibonacci";
     "multiple_lines";
     "simple_hex";
