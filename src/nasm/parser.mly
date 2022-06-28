@@ -58,9 +58,12 @@ nasm_line:
   section_name = ID ;
   NEW_LINE {
       let ret =
-        if String.equal section_name ".bss" then Nasm_untyped_syntax.Section Nasm_untyped_syntax.Bss
-        else if String.equal section_name ".data" then Nasm_untyped_syntax.Section Nasm_untyped_syntax.Data
-        else if String.equal section_name ".text" then Nasm_untyped_syntax.Section Nasm_untyped_syntax.Text
+        if String.equal section_name ".bss"
+        then Nasm_untyped_syntax.Section Nasm_untyped_syntax.Bss
+        else if String.equal section_name ".data"
+        then Nasm_untyped_syntax.Section Nasm_untyped_syntax.Data
+        else if String.equal section_name ".text"
+        then Nasm_untyped_syntax.Section Nasm_untyped_syntax.Text
         else raise (Invalid_argument (Printf.sprintf "%s is not a valid section name" section_name))
       in
       print_endline (Nasm_untyped_syntax.string_of_line ret);
