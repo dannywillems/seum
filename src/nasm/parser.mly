@@ -110,7 +110,7 @@ address:
              Nasm_untyped_syntax.Add (add1, add2)
            }
 | reg = REGISTER {
-             Nasm_untyped_syntax.R reg
+             Nasm_untyped_syntax.R (Nasm_untyped_syntax.register_of_string reg)
            }
 | a = HEX_STRING {
             Nasm_untyped_syntax.Raw a
@@ -124,10 +124,21 @@ address:
 
 (* TODO: add hex integers *)
 operand:
-| reg_name = REGISTER { Nasm_untyped_syntax.Register reg_name }
-| int = INTEGER { printf "Parser op/int: %d\n" int ; Nasm_untyped_syntax.Int int }
-| hex = HEX_STRING { printf "Parser op/hex: %s\n" hex ; Nasm_untyped_syntax.Hex hex }
-| f = FLOAT { printf "Parser op/float: %f\n" f ; Nasm_untyped_syntax.Float f }
-| op = LABEL { printf "Parser op/label: %s\n" op ; Nasm_untyped_syntax.String op }
-| op = STRING { let op = Printf.sprintf "\"%s\"" op in Nasm_untyped_syntax.String op }
+  | reg_name = REGISTER {
+                   Nasm_untyped_syntax.Register (Nasm_untyped_syntax.register_of_string reg_name) }
+| int = INTEGER {
+            printf "Parser op/int: %d\n" int ; Nasm_untyped_syntax.Int int
+          }
+| hex = HEX_STRING {
+            printf "Parser op/hex: %s\n" hex ; Nasm_untyped_syntax.Hex hex
+          }
+| f = FLOAT {
+          printf "Parser op/float: %f\n" f ; Nasm_untyped_syntax.Float f
+        }
+| op = LABEL {
+           printf "Parser op/label: %s\n" op ; Nasm_untyped_syntax.String op
+         }
+| op = STRING {
+           let op = Printf.sprintf "\"%s\"" op in Nasm_untyped_syntax.String op
+         }
 | addr = address { Nasm_untyped_syntax.Address addr }
