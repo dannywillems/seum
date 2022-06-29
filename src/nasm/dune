@@ -6,6 +6,7 @@
 
 (library
  (name nasm)
+ (preprocess (pps ppx_deriving.show ppx_variants_conv))
  (modules nasm parser lexer nasm_untyped_syntax))
 
 (executable

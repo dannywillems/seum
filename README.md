@@ -11,7 +11,8 @@ Brainstorming for first release:
   data section.
 - Encode the stack state in the type (instructions are encoded using a GADT with
   the stack state in the type)
-- Cost model: encode the cost of an instruction (CPU cycle, number of registers used, etc)
+- Cost model: encode the cost of an instruction (CPU cycle, number of registers
+  used, etc). Also, count the number of memory access
 - Compare programs based on a cost model
 - Encode the type of values registers can have (EAX can use uint32, RAX uint64, etc)
 - Instructions like `MOV` are used with registers of the same size
