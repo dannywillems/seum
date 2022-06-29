@@ -96,9 +96,69 @@ let x86_8bits_register_names = "ah" | "al" | "bl" | "bh" | "ch" | "cl" | "dh" | 
 
 let register_names = x86_16bits_register_names | x86_32bits_register_names | x86_64bits_register_names | x86_8bits_register_names
 
+let instructions_8086_8088 =
+  "aaa" | "aad" | "aam" | "aas" | "adc" | "add" | "and" | "call" | "cbw" | "clc" | "cld" |
+  "cli" | "cmc" | "cmovl" | "cmp" | "cmpzz" | "cwd" | "dec" | "inc" | "int" |
+  "jnz" | "jne" | "je" | "jmp" | "mov" | "mul" | "pop" | "push" | "ret" | "xor"
+
+(* Added in CPU 80186/80188 *)
+let instructions_80186_80188 =
+  "bound" | "enter" | "insb" | "insw" | "leave" | "outsb" | "outsw" | "popa" | "pusha" | "pushw"
+
+let instructions_80286 =
+  "arpl" | "clts" | "lar" | "lgdt" | "lidt" | "lldt" | "lmsw" | "loadall" |
+  "lsl" | "ltr" | "sgdt" | "sidt" | "sldt" | "smsw" | "str" | "verr" | "verw"
+
+let instructions_80386 =
+  "bsf" | "bsr" | "bt" | "btc" | "btr" | "bts" | "cdq" | "cmpsd" | "cwde" |
+  "insd" | "iretd" | "iretdf" | "iretf" | "jecxz" | "lfs" | "lgs" | "lss" |
+  "lodsd" | "loopd" | "looped" | "loopned" | "loopnzd" | "loopzd" | "movsd" |
+  "movsx" | "movzx" | "outsd" | "popad" | "popfd" | "pushad" | "pushd" |
+  "pushfd" | "scasd" | "seta" | "setae" | "setb" | "setbe" | "setc" | "sete" |
+  "setg" | "setge" | "setl" | "setle" | "setna" | "setnae" | "setnb" | "setnbe"
+  | "setnc" | "setne" | "setng" | "setnge" | "setnl" | "setnle" | "setno" |
+  "setnp" | "setns" | "setnz" | "seto" | "setp" | "setpe" | "setpo" | "sets" |
+  "setz" | "shld" | "shrd" | "stosd"
+
+let instructions_80486 =
+  "bswap" | "cmpxchg" | "cpuid" | "invd" | "invlpg" | "rsm" | "wbinvd" | "xadd"
+
+let instructions_pentium =
+    "cmpxchg8b" | "rdmsr" | "rdpmc" | "rdtsc" | "wrmsr"
+
+let instructions_pentium_pro =
+  "cmova" | "cmovae" | "cmovb" | "cmovb" | "cmove" | "cmovg" | "cmovge" |
+  "cmovl" | "cmovle" | "cmovna" | "cmovnae" | "cmovnb" | "cmovnbe" | "cmovnc" |
+  "cmovne" | "cmovng" | "cmovnge" | "cmovnl" | "cmovnle" | "cmovno" | "cmovnp" |
+  "cmovns" | "cmovnz" | "cmovo" | "cmovp" | "cmovpe" | "cmovpo" | "cmovs" |
+  "cmovz" | "sysenter" | "sysexit" | "ud2"
+
+let instructions_pentium_4 =
+  "maskmovq" | "movntps" | "movntq" | "prefetch0" | "prefetch1" | "prefetch2" |
+  "prefetchnta" | "sfence"
+
+let instructions_pentium_4_sse3 =
+  "clflush" | "lfence" | "maskmovdqu" | "mfence" | "movntdq" | "movnti" | "movntpd" | "pause"
+
+let instructions_mmx =
+  "emms" | "movd" | "movq" | "pabsb" | "pabsw" | "pabsd" | "packssdw" |
+  "packsswb" | "packuswb" | "paddb" | "paddd" | "paddsb" | "paddsw" | "paddusb"
+  | "paddusw" | "paddw" | "pand" | "pandn" | "pcmpeqb" | "pcmpeqd" | "pcmpeqw" |
+  "pcmpgtb" | "pcmpgtd" | "pcmpgtw" | "pmaddwd" | "pmulhw" | "pmullw" | "por" |
+  "pslld" | "psllq" | "psllw" | "psrad" | "psraw" | "psrld" | "psrlq" | "psrlw"
+  | "psubb" | "psubd" | "psubq" | "psubsb" | "psubsw" | "psubusb" | "psubusw" |
+  "psubw" | "punpckhbw" | "punpckhdq" | "punpckhwd" | "punpcklbw" | "punpckldq"
+  | "punpcklwd" | "pxor"
+
+let instructions_ss2_simd_integers =
+  "movdq2q" | "movdqa" | "movdqu" | "movq2dq" | "paddq" | "pmuludq" | "pshufhw"
+  | "pshuflw" | "pshufd" | "pslldq" | "psrldq" | "punpckhqdq" | "punpcklqdq"
+
 let instructions =
-  "push" | "mov" | "xor" | "xor" | "inc" | "call" | "ret" | "pop" | "jnz" |
-  "add" | "dec" | "int"
+  instructions_8086_8088 | instructions_80186_80188 |
+  instructions_80286 | instructions_80386 | instructions_80486 |
+  instructions_pentium | instructions_pentium_4 | instructions_pentium_4_sse3 |
+  instructions_pentium_pro | instructions_mmx | instructions_ss2_simd_integers
 
 (* Pseudo-instructions are things which, though not real x86 machine
    instructions, are used in the instruction field anyway because that's the most
