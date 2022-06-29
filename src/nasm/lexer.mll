@@ -157,8 +157,8 @@ let instructions_ss2_simd_integers =
 let instructions =
   instructions_8086_8088 | instructions_80186_80188 |
   instructions_80286 | instructions_80386 | instructions_80486 |
-  instructions_pentium | instructions_pentium_4 | instructions_pentium_4_sse3 |
-  instructions_pentium_pro | instructions_mmx | instructions_ss2_simd_integers
+  instructions_pentium | instructions_pentium_4 | instructions_pentium_4_sse3
+  instructions_pentium_pro | instructions_mmx
 
 (* Pseudo-instructions are things which, though not real x86 machine
    instructions, are used in the instruction field anyway because that's the most
