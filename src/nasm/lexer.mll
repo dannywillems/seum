@@ -263,6 +263,14 @@ rule prog = parse
       currently_in_string := true;
       string opening_quote lexbuf
     }
+  | '[' {
+    empty_line := false;
+    Parser.OPENING_SQUARE_BRACKET
+    }
+  | ']' {
+    empty_line := false;
+    Parser.CLOSING_SQUARE_BRACKET
+  }
   (* | "." { Parser.DOT } *)
   | ':' {
       empty_line := false;

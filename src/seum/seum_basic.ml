@@ -138,15 +138,17 @@ module Operand = struct
     | S of string
     | H of string
     | A of Address.t
+    | D of t
   [@@deriving variants]
 
-  let string_of_t = function
+  let rec string_of_t = function
     | F f -> string_of_float f
     | I i -> string_of_int i
     | R r -> string_of_register r
     | S s -> s
     | H s -> s
     | A a -> string_of_address a
+    | D t -> string_of_t t
 
   let string_of_ts ops = String.concat ", " (List.map string_of_t ops)
 end
@@ -382,6 +384,9 @@ let string_of_line = function
   | Section s -> Printf.sprintf "  section %s" (string_of_section s)
   | LInstr (lbl, instr) -> Printf.sprintf "%s: %s" lbl (string_of_instr instr)
   | Instr instr -> Printf.sprintf "  %s" (string_of_instr instr)
+
+let print_prog prog =
+  print_endline (String.concat "\n" (List.map string_of_line prog))
 
 let ( >>= ) (lbl, i1) i2 = [LInstr (lbl, i1); Instr i2]
 

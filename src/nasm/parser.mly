@@ -18,6 +18,8 @@
 %token PLUS
 %token MINUS
 %token DOLLAR
+%token OPENING_SQUARE_BRACKET
+%token CLOSING_SQUARE_BRACKET
 %token EOF
 %token <string> ID
 %token <string> SECTION_NAME
@@ -36,7 +38,7 @@
 %token <float> FLOAT
 %token <string> HEX_STRING
 
-%start < Nasm_untyped_syntax.line > nasm_line
+%start < Seum.line > nasm_line
 
 %%
 
@@ -45,15 +47,15 @@ nasm_line:
 | EXTERN ;
   label = LABEL ;
   NEW_LINE {
-      let ret = Nasm_untyped_syntax.Extern label in
-      print_endline (Nasm_untyped_syntax.string_of_line ret);
+      let ret = Seum.Extern label in
+      print_endline (Seum.string_of_line ret);
       ret
     }
 | GLOBAL ;
   label = LABEL ;
   NEW_LINE {
-      let ret = Nasm_untyped_syntax.Global label in
-      print_endline (Nasm_untyped_syntax.string_of_line ret);
+      let ret = Seum.Global label in
+      print_endline (Seum.string_of_line ret);
       ret
     }
 | SECTION ;
@@ -61,26 +63,27 @@ nasm_line:
   NEW_LINE {
       let ret =
         if String.equal section_name ".bss"
-        then Nasm_untyped_syntax.Section Nasm_untyped_syntax.Bss
+        then Seum.Section Seum.Bss
         else if String.equal section_name ".data"
-        then Nasm_untyped_syntax.Section Nasm_untyped_syntax.Data
+        then Seum.Section Seum.Data
         else if String.equal section_name ".text"
-        then Nasm_untyped_syntax.Section Nasm_untyped_syntax.Text
+        then Seum.Section Seum.Text
         else raise (Invalid_argument (Printf.sprintf "%s is not a valid section name" section_name))
       in
-      print_endline (Nasm_untyped_syntax.string_of_line ret);
+      print_endline (Seum.string_of_line ret);
       ret
     }
 | label_opt = option(LABEL) ;
   instr = instruction ;
   ops = separated_list(COMMA, operand) ;
   NEW_LINE {
+      let instr = Seum.instr_of_string instr ops in
       let ret =
         if (Option.is_some label_opt)
-        then Nasm_untyped_syntax.Labelled_instruction ((Option.get label_opt), instr, ops)
-        else Nasm_untyped_syntax.Instruction (instr, ops)
+        then Seum.LInstr ((Option.get label_opt), instr)
+        else Seum.Instr instr
       in
-      print_endline (Nasm_untyped_syntax.string_of_line ret);
+      print_endline (Seum.string_of_line ret);
       ret
 
     }
@@ -90,8 +93,9 @@ nasm_line:
   instr = instruction ;
   ops = separated_list(COMMA, operand) ;
   NEW_LINE {
-      let ret = Nasm_untyped_syntax.Labelled_instruction (label, instr, ops) in
-      print_endline (Nasm_untyped_syntax.string_of_line ret);
+      let instr = Seum.instr_of_string instr ops in
+      let ret = Seum.LInstr (label, instr) in
+      print_endline (Seum.string_of_line ret);
       ret
     }
 
@@ -102,43 +106,49 @@ address:
 | add1 = address ;
   MINUS ;
   add2 = address {
-             Nasm_untyped_syntax.Sub (add1, add2)
+             Seum.Address.Sub (add1, add2)
            }
 | add1 = address ;
   PLUS ;
   add2 = address {
-             Nasm_untyped_syntax.Add (add1, add2)
+             Seum.Address.Add (add1, add2)
            }
 | reg = REGISTER {
-             Nasm_untyped_syntax.R (Nasm_untyped_syntax.register_of_string reg)
+             Seum.Address.R (Seum.register_of_string reg)
            }
 | a = HEX_STRING {
-            Nasm_untyped_syntax.Raw a
+            Seum.Address.S a
           }
 | lbl = LABEL {
-          Nasm_untyped_syntax.Label lbl
+          Seum.Address.L lbl
         }
 | DOLLAR {
-  Nasm_untyped_syntax.Current
+  Seum.Address.Current
 }
 
 (* TODO: add hex integers *)
 operand:
   | reg_name = REGISTER {
-                   Nasm_untyped_syntax.Register (Nasm_untyped_syntax.register_of_string reg_name) }
+                   Seum.Operand.R (Seum.register_of_string reg_name) }
 | int = INTEGER {
-            printf "Parser op/int: %d\n" int ; Nasm_untyped_syntax.Int int
+            printf "Parser op/int: %d\n" int ; Seum.Operand.I int
           }
 | hex = HEX_STRING {
-            printf "Parser op/hex: %s\n" hex ; Nasm_untyped_syntax.Hex hex
+            printf "Parser op/hex: %s\n" hex ; Seum.Operand.H hex
           }
 | f = FLOAT {
-          printf "Parser op/float: %f\n" f ; Nasm_untyped_syntax.Float f
+          printf "Parser op/float: %f\n" f ; Seum.Operand.F f
         }
 | op = LABEL {
-           printf "Parser op/label: %s\n" op ; Nasm_untyped_syntax.String op
+           printf "Parser op/label: %s\n" op ; Seum.Operand.S op
          }
 | op = STRING {
-           let op = Printf.sprintf "\"%s\"" op in Nasm_untyped_syntax.String op
+           let op = Printf.sprintf "\"%s\"" op in Seum.Operand.S op
          }
-| addr = address { Nasm_untyped_syntax.Address addr }
+| addr = address { Seum.Operand.A addr }
+| OPENING_SQUARE_BRACKET ;
+  addr = operand ;
+  CLOSING_SQUARE_BRACKET {
+      assert (not (Seum.Operand.is_d addr));
+      Seum.Operand.D addr
+    }

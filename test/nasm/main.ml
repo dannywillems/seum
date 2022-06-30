@@ -20,7 +20,7 @@ let check_parser test_name () =
   in
   let output =
     let lines = Nasm.read_file input_filename in
-    let lines = List.map Nasm.Untyped_syntax.string_of_line lines in
+    let lines = List.map Seum.string_of_line lines in
     lines
   in
   print_endline (String.concat "\n" output) ;
