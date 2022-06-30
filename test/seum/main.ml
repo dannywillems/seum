@@ -1,18 +1,17 @@
-[@@@ocamlformat "disable=true"]
+[@@@ocamlformat "break-infix=fit-or-vertical"]
 
 let maxofthree_prog : Seum.prog =
   let open Seum in
   let open Seum.Operand in
-  ("maxofthree",
-   mov (R Rax) (R Rdi)) >>=
-   mov (R Rax) (R Rsi) >=
-   cmovl (R Rax) (R Rsi) >=
-   cmp Rax Rdx >=
-   cmovl (R Rax) (R Rdx) >=
-   ret
+  ("maxofthree" |: mov rax rdi)
+  ^> mov rax rsi
+  ^> cmovl rax rsi
+  ^> cmp rax rdx
+  ^> cmovl rax rdx
+  ^- ret
 
-[@@@ocamlformat "disable=false"]
+[@@@ocamlformat "break-infix=wrap"]
 
 let () =
   print_endline
-    (String.concat "\n" (List.map Seum.string_of_line maxofthree_prog))
+    (String.concat "\n" (List.map Seum.string_of_e_line maxofthree_prog))

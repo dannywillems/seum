@@ -45,7 +45,7 @@ type register =
   | Dl
   | Spl
   | Bpl
-[@@deriving show { with_path = false }]
+[@@deriving show { with_path = false }, variants]
 
 let string_of_register x = show_register x |> String.lowercase_ascii
 
@@ -367,22 +367,59 @@ let string_of_instr = function
   | Incbin ops -> Printf.sprintf "incbin %s" (Operand.string_of_ts ops)
   | Equ ops -> Printf.sprintf "equ %s" (Operand.string_of_ts ops)
 
-type line =
-  | Extern of symbol
-  | Global of label
-  | Section of section
-  | LInstr of label * instr
-  | Instr of instr
+type extern_
 
-type prog = line list
+type global_
 
-let string_of_line = function
+type section_
+
+type linstr_
+
+type instr_
+
+type 'a line =
+  | Extern : symbol -> extern_ line
+  | Global : label -> global_ line
+  | Section : section -> section_ line
+  | LInstr : label * instr_ line -> linstr_ line
+  | Instr : instr -> instr_ line
+
+type e_line = L : 'a line -> e_line
+
+type prog = e_line list
+
+let mov a b = Instr (mov a b)
+
+let cmovl a b = Instr (cmovl a b)
+
+let cmp a b = Instr (cmp a b)
+
+let ret = Instr ret
+
+let rax = Operand.R rax
+
+let rdi = Operand.R rdi
+
+let rsi = Operand.R rsi
+
+let rdx = Operand.R rdx
+
+let string_of_line : type a. a line -> string = function
   | Extern s -> Printf.sprintf "  extern %s" s
   | Global s -> Printf.sprintf "  global %s" s
   | Section s -> Printf.sprintf "  section %s" (string_of_section s)
-  | LInstr (lbl, instr) -> Printf.sprintf "%s: %s" lbl (string_of_instr instr)
+  | LInstr (lbl, Instr instr) ->
+      Printf.sprintf "%s: %s" lbl (string_of_instr instr)
   | Instr instr -> Printf.sprintf "  %s" (string_of_instr instr)
 
+let string_of_e_line : e_line -> string = fun (L l) -> string_of_line l
+(*
 let ( >>= ) (lbl, i1) i2 = [LInstr (lbl, i1); Instr i2]
 
-let ( >= ) l1 i2 = List.concat [l1; [Instr i2]]
+let ( >= ) l1 i2 = List.concat [l1; [Instr i2]] *)
+
+let ( |: ) s l = LInstr (s, l)
+
+let ( ^> ) l p = L l :: p
+
+let ( ^- ) l1 l2 = [L l1; L l2]
