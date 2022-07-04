@@ -130,6 +130,87 @@ module Address = struct
 
     let ( $ ) = Current
   end
+
+  (* Alias to get a more friendly UI when writing programs in OCaml *)
+  let eax = R Eax
+
+  let ebx = R Ebx
+
+  let ecx = R Ecx
+
+  let edx = R Edx
+
+  let esp = R Esp
+
+  let ebp = R Ebp
+
+  let esi = R Esi
+
+  let edi = R Edi
+
+  let rax = R Rax
+
+  let rbx = R Rbx
+
+  let rcx = R Rcx
+
+  let rdx = R Rdx
+
+  let rdi = R Rdi
+
+  let rsi = R Rsi
+
+  let r8 = R R8
+
+  let r9 = R R9
+
+  let r10 = R R10
+
+  let r11 = R R11
+
+  let r12 = R R12
+
+  let r13 = R R13
+
+  let r14 = R R14
+
+  let r15 = R R15
+
+  let ax = R Ax
+
+  let bx = R Bx
+
+  let cx = R Cx
+
+  let dx = R Dx
+
+  let sp = R Sp
+
+  let bp = R Bp
+
+  let si = R Si
+
+  let di = R Di
+
+  let ah = R Ah
+
+  let al = R Al
+
+  let bl = R Bl
+
+  let bh = R Bh
+
+  let ch = R Ch
+
+  let cl = R Cl
+
+  let dh = R Dh
+
+  let dl = R Dl
+
+  let spl = R Spl
+
+  let bpl = R Bpl
 end
 
 let rec string_of_address x =
@@ -158,6 +239,87 @@ module Operand = struct
     | L of label
   [@@deriving variants]
 
+  (* Alias to get a more friendly UI when writing programs in OCaml *)
+  let eax = R Eax
+
+  let ebx = R Ebx
+
+  let ecx = R Ecx
+
+  let edx = R Edx
+
+  let esp = R Esp
+
+  let ebp = R Ebp
+
+  let esi = R Esi
+
+  let edi = R Edi
+
+  let rax = R Rax
+
+  let rbx = R Rbx
+
+  let rcx = R Rcx
+
+  let rdx = R Rdx
+
+  let rdi = R Rdi
+
+  let rsi = R Rsi
+
+  let r8 = R R8
+
+  let r9 = R R9
+
+  let r10 = R R10
+
+  let r11 = R R11
+
+  let r12 = R R12
+
+  let r13 = R R13
+
+  let r14 = R R14
+
+  let r15 = R R15
+
+  let ax = R Ax
+
+  let bx = R Bx
+
+  let cx = R Cx
+
+  let dx = R Dx
+
+  let sp = R Sp
+
+  let bp = R Bp
+
+  let si = R Si
+
+  let di = R Di
+
+  let ah = R Ah
+
+  let al = R Al
+
+  let bl = R Bl
+
+  let bh = R Bh
+
+  let ch = R Ch
+
+  let cl = R Cl
+
+  let dh = R Dh
+
+  let dl = R Dl
+
+  let spl = R Spl
+
+  let bpl = R Bpl
+
   let string_of_t = function
     | E e -> string_of_address e
     | C c -> string_of_constant c
@@ -174,6 +336,10 @@ let string_of_section = function
   | Data -> ".data"
   | Text -> ".text"
 
+(* Pseudo instructions/operands. Important to split for the parser
+   TODO: It is not complete. For instance, times is not supported. Also, floats
+   are not accepted.
+*)
 module PseudoOperand = struct
   type t = C of constant | E of Address.t
 
@@ -239,7 +405,7 @@ type instr =
   | Xor of Operand.t * Operand.t
   | And of Operand.t * Operand.t
   | Mul of Operand.t * Operand.t
-  | Cmp of register * register
+  | Cmp of Operand.t * Operand.t
   | Int of Operand.t
   (* | Raw of string * Operand.t list *)
   | Pop of register
@@ -295,7 +461,7 @@ let instr_of_string instr ops =
       assert_length ops 2 ;
       let r1 = List.nth ops 0 in
       let r2 = List.nth ops 1 in
-      Cmp (Option.get @@ Operand.r_val r1, Option.get @@ Operand.r_val r2)
+      Cmp (r1, r2)
   | "and" ->
       assert_length ops 2 ;
       let r1 = List.nth ops 0 in
@@ -400,8 +566,8 @@ let string_of_instr = function
   | Cmp (r1, r2) ->
       Printf.sprintf
         "cmp %s, %s"
-        (string_of_register r1)
-        (string_of_register r2)
+        (Operand.string_of_t r1)
+        (Operand.string_of_t r2)
   | Int op -> Printf.sprintf "int %s" (Operand.string_of_t op)
   | Pop r -> Printf.sprintf "pop %s" (string_of_register r)
   | Push r -> Printf.sprintf "push %s" (string_of_register r)
