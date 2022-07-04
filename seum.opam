@@ -11,6 +11,8 @@ depends: [
   "integers"
   "dune" {>= "3.0.0"}
   "alcotest" {with-test}
+  "ppx_deriving"
+  "ppx_variants_conv"
 ]
 build: [[ "dune" "build" "-j" jobs "-p" name "@install" ]]
 run-test: [[ "dune" "runtest" "-p" name "-j" jobs ]]
