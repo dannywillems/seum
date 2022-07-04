@@ -22,10 +22,9 @@ let check_parser test_name () =
   in
   let output =
     let lines = Nasm.read_file input_filename in
-    let lines = List.map Seum.string_of_line lines in
+    let lines = List.map Seum.string_of_e_line lines in
     lines
   in
-  print_endline (String.concat "\n" output) ;
   assert (List.for_all2 String.equal exp_output output)
 
 let () =

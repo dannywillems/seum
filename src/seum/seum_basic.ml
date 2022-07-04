@@ -4,6 +4,8 @@ type symbol = string
 
 type label = string
 
+(* NB: if you add a register, add an alias at the top level and also in the
+   module Address.t (suffixed with _ in the latter case) *)
 type register =
   | Eax
   | Ebx
@@ -102,6 +104,7 @@ type constant =
   | Float of float
   | Int of int
   | Hexadecimal of Hex.t
+[@@deriving variants]
 
 let string_of_constant = function
   | Char c -> String.make 1 c
@@ -127,8 +130,16 @@ module Address = struct
     (* Any label *)
     | L of label
 
+  let register r = R r
+
+  let label lbl = L lbl
+
+  let int i = I i
+
   module Infix = struct
     let ( + ) x y = Add (x, y)
+
+    let ( * ) x y = Times (x, y)
 
     let ( - ) x y = Sub (x, y)
 
@@ -136,87 +147,87 @@ module Address = struct
   end
 
   (* Alias to get a more friendly UI when writing programs in OCaml *)
-  let eax = R Eax
+  let eax_ = R Eax
 
-  let ebx = R Ebx
+  let ebx_ = R Ebx
 
-  let ecx = R Ecx
+  let ecx_ = R Ecx
 
-  let edx = R Edx
+  let edx_ = R Edx
 
-  let esp = R Esp
+  let esp_ = R Esp
 
-  let ebp = R Ebp
+  let ebp_ = R Ebp
 
-  let esi = R Esi
+  let esi_ = R Esi
 
-  let edi = R Edi
+  let edi_ = R Edi
 
-  let rax = R Rax
+  let rax_ = R Rax
 
-  let rbx = R Rbx
+  let rbx_ = R Rbx
 
-  let rcx = R Rcx
+  let rcx_ = R Rcx
 
-  let rdx = R Rdx
+  let rdx_ = R Rdx
 
-  let rdi = R Rdi
+  let rdi_ = R Rdi
 
-  let rsi = R Rsi
+  let rsi_ = R Rsi
 
-  let rsp = R Rsp
+  let rsp_ = R Rsp
 
-  let r8 = R R8
+  let r8_ = R R8
 
-  let r9 = R R9
+  let r9_ = R R9
 
-  let r10 = R R10
+  let r10_ = R R10
 
-  let r11 = R R11
+  let r11_ = R R11
 
-  let r12 = R R12
+  let r12_ = R R12
 
-  let r13 = R R13
+  let r13_ = R R13
 
-  let r14 = R R14
+  let r14_ = R R14
 
-  let r15 = R R15
+  let r15_ = R R15
 
-  let ax = R Ax
+  let ax_ = R Ax
 
-  let bx = R Bx
+  let bx_ = R Bx
 
-  let cx = R Cx
+  let cx_ = R Cx
 
-  let dx = R Dx
+  let dx_ = R Dx
 
-  let sp = R Sp
+  let sp_ = R Sp
 
-  let bp = R Bp
+  let bp_ = R Bp
 
-  let si = R Si
+  let si_ = R Si
 
-  let di = R Di
+  let di_ = R Di
 
-  let ah = R Ah
+  let ah_ = R Ah
 
-  let al = R Al
+  let al_ = R Al
 
-  let bl = R Bl
+  let bl_ = R Bl
 
-  let bh = R Bh
+  let bh_ = R Bh
 
-  let ch = R Ch
+  let ch_ = R Ch
 
-  let cl = R Cl
+  let cl_ = R Cl
 
-  let dh = R Dh
+  let dh_ = R Dh
 
-  let dl = R Dl
+  let dl_ = R Dl
 
-  let spl = R Spl
+  let spl_ = R Spl
 
-  let bpl = R Bpl
+  let bpl_ = R Bpl
 end
 
 let rec string_of_address x =
@@ -244,6 +255,24 @@ module Operand = struct
     (* jmp l *)
     | L of label
   [@@deriving variants]
+
+  let label lbl = L lbl
+
+  let register r = R r
+
+  let of_address e = E e
+
+  let char c = C (char c)
+
+  let string c = C (string c)
+
+  let float x = C (float x)
+
+  let int x = C (int x)
+
+  let hexadecimal x = C (hexadecimal x)
+
+  let ( ! ) x = E x
 
   (* Alias to get a more friendly UI when writing programs in OCaml *)
   let eax = R Eax
@@ -350,6 +379,18 @@ let string_of_section = function
 module PseudoOperand = struct
   type t = C of constant | E of Address.t
 
+  let of_address e = E e
+
+  let char c = C (char c)
+
+  let string c = C (string c)
+
+  let float x = C (float x)
+
+  let int x = C (int x)
+
+  let hexadecimal x = C (hexadecimal x)
+
   let string_of_t = function
     | E e -> string_of_address e
     | C c -> string_of_constant c
@@ -357,6 +398,8 @@ module PseudoOperand = struct
   let string_of_ts ops = String.concat ", " (List.map string_of_t ops)
 end
 
+(* If you add a pseudo instruction, add an alias function to build the
+   corresponding type pseudo_instr_ line at the bottom of this file *)
 type pseudo_instr =
   (* Pseudo instruction *)
   | Db of PseudoOperand.t list
@@ -401,6 +444,8 @@ let pseudo_instr_of_string instr ops =
         (Invalid_argument
            (Printf.sprintf "Unsupported pseudo instruction %s" instr))
 
+(* If you add an instruction, add an alias function to build the
+   corresponding type instr_ line at the bottom of this file *)
 type instr =
   | Mov of Operand.t * Operand.t
   | Cmovl of Operand.t * Operand.t
@@ -416,8 +461,8 @@ type instr =
   | Cmp of Operand.t * Operand.t
   | Int of Operand.t
   (* | Raw of string * Operand.t list *)
-  | Pop of register
-  | Push of register
+  | Pop of Operand.t
+  | Push of Operand.t
   | Ret
   | Jnz of label
   | Call of label
@@ -456,11 +501,11 @@ let instr_of_string instr ops =
   | "push" ->
       assert_length ops 1 ;
       let r1 = List.nth ops 0 in
-      Push (Option.get @@ Operand.r_val r1)
+      Push r1
   | "pop" ->
       assert_length ops 1 ;
       let r1 = List.nth ops 0 in
-      Pop (Option.get @@ Operand.r_val r1)
+      Pop r1
   | "int" ->
       assert_length ops 1 ;
       let r1 = List.nth ops 0 in
@@ -587,36 +632,136 @@ let string_of_instr = function
         (Operand.string_of_t r1)
         (Operand.string_of_t r2)
   | Int op -> Printf.sprintf "int %s" (Operand.string_of_t op)
-  | Pop r -> Printf.sprintf "pop %s" (string_of_register r)
-  | Push r -> Printf.sprintf "push %s" (string_of_register r)
+  | Pop r -> Printf.sprintf "pop %s" (Operand.string_of_t r)
+  | Push r -> Printf.sprintf "push %s" (Operand.string_of_t r)
 
-type line =
-  | Extern of symbol
-  | Global of label
-  | Section of section
-  | LInstr of label * instr
-  | PseudoInstr of label * pseudo_instr
-  | Instr of instr
+(* Abstract line *)
+type extern_
 
-type prog = line list
+type global_
 
-let string_of_line = function
+type section_
+
+type instr_
+
+type pseudo_instr_
+
+type linstr_
+
+type 'a line =
+  | Extern : symbol -> extern_ line
+  | Global : label -> global_ line
+  | Section : section -> section_ line
+  | LInstr : label * instr_ line -> linstr_ line
+  | PseudoInstr : label * pseudo_instr -> pseudo_instr_ line
+  | Instr : instr -> instr_ line
+
+type e_line = L : 'a line -> e_line
+
+type prog = e_line list
+
+let string_of_line : type a. a line -> string = function
   | Extern s -> Printf.sprintf "  extern %s" s
   | Global s -> Printf.sprintf "  global %s" s
   | Section s -> Printf.sprintf "  section %s" (string_of_section s)
-  | LInstr (lbl, instr) -> Printf.sprintf "%s: %s" lbl (string_of_instr instr)
+  | LInstr (lbl, Instr instr) ->
+      Printf.sprintf "%s: %s" lbl (string_of_instr instr)
   | PseudoInstr (lbl, instr) ->
       Printf.sprintf "%s: %s" lbl (string_of_pseudo_instr instr)
   | Instr instr -> Printf.sprintf "  %s" (string_of_instr instr)
 
-let string_of_prog prog = String.concat "\n" (List.map string_of_line prog)
+let string_of_e_line (L l) = string_of_line l
+
+let string_of_prog p = String.concat "\n" (List.map string_of_e_line p)
 
 let print_prog prog = print_endline (string_of_prog prog)
 
-let ( |: ) lbl i = LInstr (lbl, i)
+(* Syntactic sugar for instruction *)
+let mov op1 op2 = Instr (mov op1 op2)
 
-(* let ( :> ) i1 prog = i1 :: prog *)
+let cmovl op1 op2 = Instr (cmovl op1 op2)
 
-let ( >>= ) i1 i2 = [i1; Instr i2]
+let add op1 op2 = Instr (add op1 op2)
 
-let ( >= ) l1 i2 = List.concat [l1; [Instr i2]]
+let sub op1 op2 = Instr (sub op1 op2)
+
+let addc op1 op2 = Instr (addc op1 op2)
+
+let mulc op1 op2 = Instr (mulc op1 op2)
+
+let dec op1 = Instr (dec op1)
+
+let inc op1 = Instr (inc op1)
+
+let xor op1 op2 = Instr (xor op1 op2)
+
+let and_ x y = Instr (And (x, y))
+
+let mul op1 op2 = Instr (mul op1 op2)
+
+let cmp op1 op2 = Instr (cmp op1 op2)
+
+let int i = Instr (int (Operand.C (Int i)))
+
+let pop r = Instr (pop r)
+
+let push r = Instr (push r)
+
+let ret = Instr ret
+
+let jnz lbl = Instr (jnz lbl)
+
+let call lbl = Instr (call lbl)
+
+(* Pseudo instruction *)
+let db lbl ops = PseudoInstr (lbl, db ops)
+
+let dw lbl ops = PseudoInstr (lbl, dw ops)
+
+let dd lbl ops = PseudoInstr (lbl, dd ops)
+
+let dq lbl ops = PseudoInstr (lbl, dq ops)
+
+let ddq lbl ops = PseudoInstr (lbl, ddq ops)
+
+let dt lbl ops = PseudoInstr (lbl, dt ops)
+
+let do_ lbl ops = PseudoInstr (lbl, Do ops)
+
+let resb lbl ops = PseudoInstr (lbl, resb ops)
+
+let resw lbl ops = PseudoInstr (lbl, resw ops)
+
+let resd lbl ops = PseudoInstr (lbl, resd ops)
+
+let resq lbl ops = PseudoInstr (lbl, resq ops)
+
+let rest lbl ops = PseudoInstr (lbl, rest ops)
+
+let reso lbl ops = PseudoInstr (lbl, reso ops)
+
+let resy lbl ops = PseudoInstr (lbl, resy ops)
+
+let incbin lbl ops = PseudoInstr (lbl, incbin ops)
+
+let equ lbl ops = PseudoInstr (lbl, equ ops)
+
+(* Syntactic sugar for programs *)
+
+let ( |: ) s l = LInstr (s, l)
+
+let ( ^> ) l p = L l :: p
+
+let ( ^- ) l1 l2 = [L l1; L l2]
+
+let global str = Global str
+
+let extern str = Extern str
+
+let to_line l = L l
+
+let section_text = Section Text
+
+let section_data = Section Data
+
+let section_bss = Section Bss

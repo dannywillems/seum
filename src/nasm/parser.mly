@@ -40,7 +40,7 @@
 %token <float> FLOAT
 %token <string> HEX_STRING
 
-%start < Seum.line > nasm_line
+%start < Seum.e_line > nasm_line
 
 %%
 
@@ -49,15 +49,15 @@ nasm_line:
 | EXTERN ;
   label = LABEL ;
   NEW_LINE {
-      let ret = Seum.Extern label in
-      print_endline (Seum.string_of_line ret);
+      let ret = Seum.(L (extern label)) in
+      print_endline (Seum.string_of_e_line ret);
       ret
     }
 | GLOBAL ;
   label = LABEL ;
   NEW_LINE {
-      let ret = Seum.Global label in
-      print_endline (Seum.string_of_line ret);
+      let ret = Seum.(L (global label)) in
+      print_endline (Seum.string_of_e_line ret);
       ret
     }
 | SECTION ;
@@ -65,14 +65,14 @@ nasm_line:
   NEW_LINE {
       let ret =
         if String.equal section_name ".bss"
-        then Seum.Section Seum.Bss
+        then Seum.(L section_bss)
         else if String.equal section_name ".data"
-        then Seum.Section Seum.Data
+        then Seum.(L section_data)
         else if String.equal section_name ".text"
-        then Seum.Section Seum.Text
+        then Seum.(L section_text)
         else raise (Invalid_argument (Printf.sprintf "%s is not a valid section name" section_name))
       in
-      print_endline (Seum.string_of_line ret);
+      print_endline (Seum.string_of_e_line ret);
       ret
     }
 | label_opt = option(LABEL) ;
@@ -82,10 +82,10 @@ nasm_line:
       let instr = Seum.instr_of_string instr ops in
       let ret =
         if (Option.is_some label_opt)
-        then Seum.LInstr ((Option.get label_opt), instr)
-        else Seum.Instr instr
+        then Seum.(L (LInstr ((Option.get label_opt), Instr instr)))
+        else Seum.(L (Instr instr))
       in
-      print_endline (Seum.string_of_line ret);
+      print_endline (Seum.string_of_e_line ret);
       ret
     }
 | label = LABEL ;
@@ -95,20 +95,20 @@ nasm_line:
   NEW_LINE {
       let instr = Seum.pseudo_instr_of_string instr ops in
       let ret =
-        Seum.PseudoInstr (label, instr)
+        Seum.(L (PseudoInstr (label, instr)))
       in
-      print_endline (Seum.string_of_line ret);
+      print_endline (Seum.string_of_e_line ret);
       ret
     }
-| label = LABEL ;
+| lbl = LABEL ;
   COLON ;
   option(NEW_LINE) ;
   instr = instruction ;
   ops = separated_list(COMMA, operand) ;
   NEW_LINE {
       let instr = Seum.instr_of_string instr ops in
-      let ret = Seum.LInstr (label, instr) in
-      print_endline (Seum.string_of_line ret);
+      let ret = Seum.(L (LInstr (lbl, Instr instr))) in
+      print_endline (Seum.string_of_e_line ret);
       ret
     }
 
@@ -119,26 +119,29 @@ address:
 | add1 = address ;
   MINUS ;
   add2 = address {
-             Seum.Address.Sub (add1, add2)
+             let ( - ) = Seum.Address.Infix.( - ) in
+             add1 - add2
            }
 | add1 = address ;
   TIMES ;
   add2 = address {
-             Seum.Address.Times (add1, add2)
+             let ( * ) = Seum.Address.Infix.( * ) in
+             add1 * add2
            }
 | add1 = address ;
   PLUS ;
   add2 = address {
-             Seum.Address.Add (add1, add2)
+             let ( + ) = Seum.Address.Infix.( + ) in
+             add1 + add2
            }
 | reg = REGISTER {
-             Seum.Address.R (Seum.register_of_string reg)
+             Seum.Address.register (Seum.register_of_string reg)
            }
 | lbl = LABEL {
-          Seum.Address.L lbl
+          Seum.Address.label lbl
         }
 | DOLLAR {
-  Seum.Address.Current
+  Seum.Address.Infix.($)
 }
 
 pseudo_instruction:
@@ -146,41 +149,41 @@ pseudo_instruction:
 
 pseudo_operand:
 | int = INTEGER {
-            printf "Parser op/int: %d\n" int ; Seum.PseudoOperand.C (Seum.Int int)
+            printf "Parser op/int: %d\n" int ; Seum.PseudoOperand.int int
           }
 | f = FLOAT {
-          printf "Parser op/float: %f\n" f ; Seum.PseudoOperand.C (Seum.Float f)
+          printf "Parser op/float: %f\n" f ; Seum.PseudoOperand.float f
         }
 | hex = HEX_STRING {
-            printf "Parser op/hex: %s\n" hex ; Seum.PseudoOperand.C (Seum.Hexadecimal (`Hex hex))
+            printf "Parser op/hex: %s\n" hex ; Seum.PseudoOperand.hexadecimal (`Hex hex)
           }
 | str = STRING {
-            printf "Parser op/str: %s\n" str ; Seum.PseudoOperand.C (Seum.String str)
+            printf "Parser op/str: %s\n" str ; Seum.PseudoOperand.string str
           }
 | addr = address {
-      Seum.PseudoOperand.E addr
+      Seum.PseudoOperand.of_address addr
     }
 
 operand:
 | reg_name = REGISTER {
-                  Seum.Operand.R (Seum.register_of_string reg_name) }
+                  Seum.Operand.register (Seum.register_of_string reg_name) }
 | int = INTEGER {
-            printf "Parser op/int: %d\n" int ; Seum.Operand.C (Seum.Int int)
+            printf "Parser op/int: %d\n" int ; Seum.Operand.int int
           }
 | f = FLOAT {
-            printf "Parser op/float: %f\n" f ; Seum.Operand.C (Seum.Float f)
+            printf "Parser op/float: %f\n" f ; Seum.Operand.float f
           }
 | hex = HEX_STRING {
-            printf "Parser op/hex: %s\n" hex ; Seum.Operand.C (Seum.Hexadecimal (`Hex hex))
+            printf "Parser op/hex: %s\n" hex ; Seum.Operand.hexadecimal (`Hex hex)
           }
 | str = STRING {
-            printf "Parser op/str: %s\n" str ; Seum.Operand.C (Seum.String str)
+            printf "Parser op/str: %s\n" str ; Seum.Operand.string str
           }
 | lbl = LABEL {
-           printf "Parser op/label: %s\n" lbl ; Seum.Operand.L lbl
+           printf "Parser op/label: %s\n" lbl ; Seum.Operand.label lbl
          }
 | OPENING_SQUARE_BRACKET ;
   addr = address ;
   CLOSING_SQUARE_BRACKET {
-      Seum.Operand.E addr
+      Seum.Operand.of_address addr
     }
