@@ -11,6 +11,7 @@ depends: [
   "integers"
   "dune" {>= "3.0.0"}
   "alcotest" {with-test}
+  "hex"
   "ppx_deriving"
   "ppx_variants_conv"
 ]
