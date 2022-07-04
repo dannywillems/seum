@@ -97,12 +97,14 @@ let register_of_string x =
 type constant =
   | Char of char
   | String of string
+  | Float of float
   | Int of int
   | Hexadecimal of Hex.t
 
 let string_of_constant = function
   | Char c -> String.make 1 c
   | String s -> Printf.sprintf "\"%s\"" s
+  | Float f -> string_of_float f
   | Hexadecimal h -> Printf.sprintf "%s" (Hex.show h)
   | Int i -> string_of_int i
 
@@ -337,8 +339,7 @@ let string_of_section = function
   | Text -> ".text"
 
 (* Pseudo instructions/operands. Important to split for the parser
-   TODO: It is not complete. For instance, times is not supported. Also, floats
-   are not accepted.
+   TODO: It is not complete. For instance, times is not supported.
 *)
 module PseudoOperand = struct
   type t = C of constant | E of Address.t

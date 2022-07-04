@@ -221,8 +221,12 @@ let alpha_capitalize = ['A' - 'Z']
 let alpha_num = ['A' - 'Z' 'a' - 'z' '0' - '9']
 let alpha_lowercase = ['a' - 'z']
 let any_character = ['A' - 'Z' 'a' - 'z' '0' - '9' ' ' '\t' '\r' '%']
-let integers = ['0' - '9']+
-let floats =  ['-' '+']? [ '0' - '9' ]* ['.']? [ '0' - '9' ]*
+let digit = ['0' - '9']
+let integer = digit+
+let sign = ['+' '-']
+let exponent = ['e' 'E'] sign? digit+
+let dot = '.'
+let floats = sign? digit* dot? digit* exponent? digit+
 let hex_integers = "0x" ['0' - '9' 'a' - 'f' 'A' - 'F']
 
 (*
@@ -307,7 +311,7 @@ rule prog = parse
       Parser.COMMA
     }
   (* Integers *)
-  | integers as ident {
+  | integer as ident {
       empty_line := false;
       Parser.INTEGER (int_of_string ident)
     }

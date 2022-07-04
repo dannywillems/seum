@@ -1,0 +1,15 @@
+t: db 0x55
+t: db 0x55, 0x56, 0x57
+t: db "a", 0x55
+t: db "hello", 13, 10, "$"
+t: dw 0x1234
+t: dw "a"
+t: dw "ab"
+t: dw "abc"
+t: dd 0x12345678
+t: dq 0x1122334455667788
+t: ddq 0x112233445566778899aabbccddeeff00
+t: do 0x112233445566778899aabbccddeeff00
+t: dd 1.234567e+20
+t: dq 1.234567e+20
+t: dt 1.234567e+20

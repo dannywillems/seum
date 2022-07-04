@@ -148,6 +148,9 @@ pseudo_operand:
 | int = INTEGER {
             printf "Parser op/int: %d\n" int ; Seum.PseudoOperand.C (Seum.Int int)
           }
+| f = FLOAT {
+          printf "Parser op/float: %f\n" f ; Seum.PseudoOperand.C (Seum.Float f)
+        }
 | hex = HEX_STRING {
             printf "Parser op/hex: %s\n" hex ; Seum.PseudoOperand.C (Seum.Hexadecimal (`Hex hex))
           }
@@ -158,12 +161,14 @@ pseudo_operand:
       Seum.PseudoOperand.E addr
     }
 
-(* TODO: add hex integers *)
 operand:
 | reg_name = REGISTER {
                   Seum.Operand.R (Seum.register_of_string reg_name) }
 | int = INTEGER {
             printf "Parser op/int: %d\n" int ; Seum.Operand.C (Seum.Int int)
+          }
+| f = FLOAT {
+            printf "Parser op/float: %f\n" f ; Seum.Operand.C (Seum.Float f)
           }
 | hex = HEX_STRING {
             printf "Parser op/hex: %s\n" hex ; Seum.Operand.C (Seum.Hexadecimal (`Hex hex))
