@@ -40,7 +40,7 @@
 %token <float> FLOAT
 %token <string> HEX_STRING
 
-%start < Seum.line > nasm_line
+%start < Seum.e_line > nasm_line
 
 %%
 
@@ -82,7 +82,7 @@ nasm_line:
       let instr = Seum.instr_of_string instr ops in
       let ret =
         if (Option.is_some label_opt)
-        then Seum.LInstr ((Option.get label_opt), instr)
+        then Seum.LInstr ((Option.get label_opt), Seum.Instr instr)
         else Seum.Instr instr
       in
       print_endline (Seum.string_of_line ret);
@@ -107,7 +107,7 @@ nasm_line:
   ops = separated_list(COMMA, operand) ;
   NEW_LINE {
       let instr = Seum.instr_of_string instr ops in
-      let ret = Seum.LInstr (label, instr) in
+      let ret = Seum.LInstr (label, Seum.Instr instr) in
       print_endline (Seum.string_of_line ret);
       ret
     }

@@ -573,28 +573,55 @@ let string_of_instr = function
   | Pop r -> Printf.sprintf "pop %s" (string_of_register r)
   | Push r -> Printf.sprintf "push %s" (string_of_register r)
 
-type line =
-  | Extern of symbol
-  | Global of label
-  | Section of section
-  | LInstr of label * instr
-  | PseudoInstr of label * pseudo_instr
-  | Instr of instr
+(* The lines in a nasm programs should not be threated in the same ways. A
+   parametrised GADT is used to differentiate each line type. It might be useful if
+   it requires to distinguish them at some point
 
-type prog = line list
+   Also, using a GADT for the labeled instruction
+*)
+type global_
 
-let string_of_line = function
+type extern_
+
+type section_
+
+type linstr_
+
+type instr_
+
+type pseudo_instr_
+
+type 'a line =
+  | Extern : symbol -> extern_ line
+  | Global : label -> global_ line
+  | Section : section -> section_ line
+  | LInstr : label * instr_ line -> linstr_ line
+  (* We can not build a pseudo instruction without a label *)
+  | PseudoInstr : label * pseudo_instr -> pseudo_instr_ line
+  | Instr : instr -> instr_ line
+
+let string_of_line : type a. a line -> string = function
   | Extern s -> Printf.sprintf "  extern %s" s
   | Global s -> Printf.sprintf "  global %s" s
   | Section s -> Printf.sprintf "  section %s" (string_of_section s)
-  | LInstr (lbl, instr) -> Printf.sprintf "%s: %s" lbl (string_of_instr instr)
+  | LInstr (lbl, Instr instr) ->
+      Printf.sprintf "%s: %s" lbl (string_of_instr instr)
   | PseudoInstr (lbl, instr) ->
       Printf.sprintf "%s: %s" lbl (string_of_pseudo_instr instr)
   | Instr instr -> Printf.sprintf "  %s" (string_of_instr instr)
 
+(* but a program is still an abstract list of lines *)
+type e_line = L : 'a line -> e_line
+
+type prog = e_line list
+
+let string_of_e_line : e_line -> string = fun (L l) -> string_of_line l
+
 let print_prog prog =
-  print_endline (String.concat "\n" (List.map string_of_line prog))
+  print_endline (String.concat "\n" (List.map string_of_e_line prog))
 
-let ( >>= ) (lbl, i1) i2 = [LInstr (lbl, i1); Instr i2]
+let ( |: ) s l = LInstr (s, Instr l)
 
-let ( >= ) l1 i2 = List.concat [l1; [Instr i2]]
+let ( ^> ) l p = L l :: p
+
+let ( ^- ) l1 l2 = [L l1; L (Instr l2)]
