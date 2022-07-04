@@ -3,13 +3,12 @@
 let maxofthree_prog : Seum.prog =
   let open Seum in
   let open Seum.Operand in
-  ("maxofthree",
-   mov rax rdi) >>=
-   mov rax rsi >=
-   cmovl rax rsi >=
-   cmp rax rdx >=
-   cmovl rax rdx >=
-   ret
+  "maxofthree" |: mov rax rdi
+   >>= mov rax rsi
+   >=  cmovl rax rsi
+   >=  cmp rax rdx
+   >=  cmovl rax rdx
+   >=  ret
 
 [@@@ocamlformat "disable=false"]
 

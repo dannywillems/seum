@@ -612,6 +612,10 @@ let string_of_line = function
 let print_prog prog =
   print_endline (String.concat "\n" (List.map string_of_line prog))
 
-let ( >>= ) (lbl, i1) i2 = [LInstr (lbl, i1); Instr i2]
+let ( |: ) lbl i = LInstr (lbl, i)
+
+(* let ( :> ) i1 prog = i1 :: prog *)
+
+let ( >>= ) i1 i2 = [i1; Instr i2]
 
 let ( >= ) l1 i2 = List.concat [l1; [Instr i2]]
