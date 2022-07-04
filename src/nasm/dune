@@ -9,9 +9,4 @@
  (libraries seum)
  (preprocess
   (pps ppx_deriving.show ppx_variants_conv))
- (modules nasm parser lexer nasm_untyped_syntax))
-
-(executable
- (name nasm_ex)
- (modules nasm_ex)
- (libraries nasm seum))
+ (modules nasm parser lexer))

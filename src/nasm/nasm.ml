@@ -1,5 +1,3 @@
-module Untyped_syntax = Nasm_untyped_syntax
-
 let read_file filename =
   let c = open_in filename in
   let lexbuf = Lexing.from_channel c in
