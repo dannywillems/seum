@@ -4,6 +4,8 @@ type symbol = string
 
 type label = string
 
+let label lbl = lbl
+
 (* NB: if you add a register, add an alias at the top level and also in the
    module Address.t (suffixed with _ in the latter case) *)
 type register =

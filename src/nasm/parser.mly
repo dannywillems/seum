@@ -47,16 +47,16 @@
 nasm_line:
 | EOF { raise End_of_file }
 | EXTERN ;
-  label = LABEL ;
+  lbl = LABEL ;
   NEW_LINE {
-      let ret = Seum.(L (extern label)) in
+      let ret = Seum.(L (extern (label lbl))) in
       print_endline (Seum.string_of_e_line ret);
       ret
     }
 | GLOBAL ;
-  label = LABEL ;
+  lbl = LABEL ;
   NEW_LINE {
-      let ret = Seum.(L (global label)) in
+      let ret = Seum.(L (global (label lbl))) in
       print_endline (Seum.string_of_e_line ret);
       ret
     }
@@ -75,27 +75,27 @@ nasm_line:
       print_endline (Seum.string_of_e_line ret);
       ret
     }
-| label_opt = option(LABEL) ;
+| lbl_opt = option(LABEL) ;
   instr = instruction ;
   ops = separated_list(COMMA, operand) ;
   NEW_LINE {
       let instr = Seum.instr_of_string instr ops in
       let ret =
-        if (Option.is_some label_opt)
-        then Seum.(L (LInstr ((Option.get label_opt), Instr instr)))
+        if (Option.is_some lbl_opt)
+        then Seum.(L (LInstr (label (Option.get lbl_opt), Instr instr)))
         else Seum.(L (Instr instr))
       in
       print_endline (Seum.string_of_e_line ret);
       ret
     }
-| label = LABEL ;
+| lbl = LABEL ;
   option(COLON) ;
   instr = pseudo_instruction ;
   ops = separated_list(COMMA, pseudo_operand) ;
   NEW_LINE {
       let instr = Seum.pseudo_instr_of_string instr ops in
       let ret =
-        Seum.(L (PseudoInstr (label, instr)))
+        Seum.(L (PseudoInstr (label lbl, instr)))
       in
       print_endline (Seum.string_of_e_line ret);
       ret
@@ -107,7 +107,7 @@ nasm_line:
   ops = separated_list(COMMA, operand) ;
   NEW_LINE {
       let instr = Seum.instr_of_string instr ops in
-      let ret = Seum.(L (LInstr (lbl, Instr instr))) in
+      let ret = Seum.(L (LInstr (label lbl, Instr instr))) in
       print_endline (Seum.string_of_e_line ret);
       ret
     }
@@ -138,7 +138,7 @@ address:
              Seum.Address.register (Seum.register_of_string reg)
            }
 | lbl = LABEL {
-          Seum.Address.label lbl
+          Seum.Address.label (Seum.label lbl)
         }
 | DOLLAR {
   Seum.Address.Infix.($)
@@ -180,7 +180,7 @@ operand:
             printf "Parser op/str: %s\n" str ; Seum.Operand.string str
           }
 | lbl = LABEL {
-           printf "Parser op/label: %s\n" lbl ; Seum.Operand.label lbl
+           printf "Parser op/label: %s\n" lbl ; Seum.Operand.label (Seum.label lbl)
          }
 | OPENING_SQUARE_BRACKET ;
   addr = address ;

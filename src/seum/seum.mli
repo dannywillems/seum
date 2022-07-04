@@ -1,6 +1,8 @@
 type symbol = string
 
-type label = string
+type label
+
+val label : string -> label
 
 type register
 
@@ -15,7 +17,7 @@ val string_of_constant : constant -> string
 module Address : sig
   type t
 
-  val label : string -> t
+  val label : label -> t
 
   val register : register -> t
 
@@ -131,7 +133,7 @@ module Operand : sig
 
   val of_address : Address.t -> t
 
-  val label : string -> t
+  val label : label -> t
 
   (** Dereferencement *)
   val ( ! ) : Address.t -> t
@@ -326,9 +328,9 @@ val push : Operand.t -> instr_ line
 
 val ret : instr_ line
 
-val jnz : string -> instr_ line
+val jnz : label -> instr_ line
 
-val call : string -> instr_ line
+val call : label -> instr_ line
 
 (** Pseudo instructions *)
 
@@ -368,9 +370,9 @@ val equ : string -> PseudoOperand.t list -> pseudo_instr_ line
 
 val to_line : 'a line -> e_line
 
-val global : string -> global_ line
+val global : label -> global_ line
 
-val extern : string -> extern_ line
+val extern : label -> extern_ line
 
 val section_text : section_ line
 
@@ -380,7 +382,7 @@ val section_data : section_ line
 
 (** Syntactic sugar for building programs *)
 
-val ( |: ) : string -> instr_ line -> linstr_ line
+val ( |: ) : label -> instr_ line -> linstr_ line
 
 val ( ^> ) : 'a line -> prog -> prog
 
