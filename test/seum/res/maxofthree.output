@@ -1,0 +1,6 @@
+maxofthree: mov rax, rdi
+  mov rax, rsi
+  cmovl rax, rsi
+  cmp rax, rdx
+  cmovl rax, rdx
+  ret

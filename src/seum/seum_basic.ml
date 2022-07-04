@@ -609,8 +609,9 @@ let string_of_line = function
       Printf.sprintf "%s: %s" lbl (string_of_pseudo_instr instr)
   | Instr instr -> Printf.sprintf "  %s" (string_of_instr instr)
 
-let print_prog prog =
-  print_endline (String.concat "\n" (List.map string_of_line prog))
+let string_of_prog prog = String.concat "\n" (List.map string_of_line prog)
+
+let print_prog prog = print_endline (string_of_prog prog)
 
 let ( |: ) lbl i = LInstr (lbl, i)
 
