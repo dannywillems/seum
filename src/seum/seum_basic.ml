@@ -19,6 +19,7 @@ type register =
   | Rdx
   | Rdi
   | Rsi
+  | Rsp
   | R8
   | R9
   | R10
@@ -66,6 +67,7 @@ let register_of_string x =
   | "rdx" -> Rdx
   | "rdi" -> Rdi
   | "rsi" -> Rsi
+  | "rsp" -> Rsp
   | "r8" -> R8
   | "r9" -> R9
   | "r10" -> R10
@@ -161,6 +163,8 @@ module Address = struct
   let rdi = R Rdi
 
   let rsi = R Rsi
+
+  let rsp = R Rsp
 
   let r8 = R R8
 
@@ -270,6 +274,8 @@ module Operand = struct
 
   let rsi = R Rsi
 
+  let rsp = R Rsp
+
   let r8 = R R8
 
   let r9 = R R9
@@ -323,7 +329,7 @@ module Operand = struct
   let bpl = R Bpl
 
   let string_of_t = function
-    | E e -> string_of_address e
+    | E e -> Printf.sprintf "[%s]" (string_of_address e)
     | C c -> string_of_constant c
     | R r -> string_of_register r
     | L l -> l
@@ -399,6 +405,7 @@ type instr =
   | Mov of Operand.t * Operand.t
   | Cmovl of Operand.t * Operand.t
   | Add of Operand.t * Operand.t
+  | Sub of Operand.t * Operand.t
   | Addc of Operand.t * Operand.t
   | Mulc of Operand.t * Operand.t
   | Dec of Operand.t
@@ -491,6 +498,11 @@ let instr_of_string instr ops =
       let r1 = List.nth ops 0 in
       let r2 = List.nth ops 1 in
       Addc (r1, r2)
+  | "sub" ->
+      assert_length ops 2 ;
+      let r1 = List.nth ops 0 in
+      let r2 = List.nth ops 1 in
+      Sub (r1, r2)
   | "mul" ->
       assert_length ops 2 ;
       let r1 = List.nth ops 0 in
@@ -561,6 +573,11 @@ let string_of_instr = function
   | Mul (r1, r2) ->
       Printf.sprintf
         "mul %s, %s"
+        (Operand.string_of_t r1)
+        (Operand.string_of_t r2)
+  | Sub (r1, r2) ->
+      Printf.sprintf
+        "sub %s, %s"
         (Operand.string_of_t r1)
         (Operand.string_of_t r2)
   | Ret -> "ret"

@@ -3,6 +3,7 @@ let test_names =
     "simple_with_comments";
     "operand_string_single_quote";
     "float";
+    "print";
     "fibonacci";
     "hello_world";
     "multiple_lines";

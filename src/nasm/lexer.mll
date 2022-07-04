@@ -178,6 +178,10 @@ let instructions_ss2_simd_integers =
   in
   Hashtbl.of_seq (List.to_seq (List.map (fun x -> x, x) tmp))
 
+let instruction_to_classify =
+  let tmp = ["sub"] in
+  Hashtbl.of_seq (List.to_seq (List.map (fun x -> x, x) tmp))
+
 let is_instruction x =
   let x = String.lowercase_ascii x in
   Hashtbl.mem instructions_8086_8088 x ||
@@ -190,7 +194,8 @@ let is_instruction x =
   Hashtbl.mem instructions_pentium_pro x ||
   Hashtbl.mem instructions_pentium_4_sse3 x ||
   Hashtbl.mem instructions_ss2_simd_integers x ||
-  Hashtbl.mem instructions_mmx x
+  Hashtbl.mem instructions_mmx x ||
+  Hashtbl.mem instruction_to_classify x
 
 let pseudo_instructions =
   let tmp = [
