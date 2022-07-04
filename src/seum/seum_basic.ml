@@ -94,6 +94,18 @@ let register_of_string x =
   | "bpl" -> Bpl
   | _ -> raise (Invalid_argument (Printf.sprintf "Unknown register %s" x))
 
+type constant =
+  | Char of char
+  | String of string
+  | Int of int
+  | Hexadecimal of Hex.t
+
+let string_of_constant = function
+  | Char c -> String.make 1 c
+  | String s -> Printf.sprintf "\"%s\"" s
+  | Hexadecimal h -> Printf.sprintf "%s" (Hex.show h)
+  | Int i -> string_of_int i
+
 module Address = struct
   type t =
     (* $ *)
@@ -102,10 +114,12 @@ module Address = struct
     | Add of t * t
     (* Sub *)
     | Sub of t * t
+    (* eax * 2 *)
+    | Times of t * t
+    (* 2 *)
+    | I of int
     (* Register *)
     | R of register
-    (* Raw address as a string, hex string, etc *)
-    | S of string
     (* Any label *)
     | L of label
 
@@ -124,31 +138,31 @@ let rec string_of_address x =
   | Current -> "$"
   | Add (x, y) ->
       Printf.sprintf "(%s + %s)" (string_of_address x) (string_of_address y)
+  | Times (x, y) ->
+      Printf.sprintf "(%s * %s)" (string_of_address x) (string_of_address y)
   | Sub (x, y) ->
       Printf.sprintf "(%s - %s)" (string_of_address x) (string_of_address y)
   | R r -> string_of_register r
-  | S a -> a
+  | I i -> string_of_int i
   | L l -> l
 
 module Operand = struct
   type t =
-    | F of float
-    | I of int
+    (* mov eax, [eax] *)
+    | E of Address.t
+    (* format db 'char' *)
+    | C of constant
+    (* mov eax, eax *)
     | R of register
-    | S of string
-    | H of string
-    | A of Address.t
-    | D of t
+    (* jmp l *)
+    | L of label
   [@@deriving variants]
 
-  let rec string_of_t = function
-    | F f -> string_of_float f
-    | I i -> string_of_int i
+  let string_of_t = function
+    | E e -> string_of_address e
+    | C c -> string_of_constant c
     | R r -> string_of_register r
-    | S s -> s
-    | H s -> s
-    | A a -> string_of_address a
-    | D t -> string_of_t t
+    | L l -> l
 
   let string_of_ts ops = String.concat ", " (List.map string_of_t ops)
 end
@@ -159,6 +173,60 @@ let string_of_section = function
   | Bss -> ".bss"
   | Data -> ".data"
   | Text -> ".text"
+
+module PseudoOperand = struct
+  type t = C of constant | E of Address.t
+
+  let string_of_t = function
+    | E e -> string_of_address e
+    | C c -> string_of_constant c
+
+  let string_of_ts ops = String.concat ", " (List.map string_of_t ops)
+end
+
+type pseudo_instr =
+  (* Pseudo instruction *)
+  | Db of PseudoOperand.t list
+  | Dw of PseudoOperand.t list
+  | Dd of PseudoOperand.t list
+  | Dq of PseudoOperand.t list
+  | Ddq of PseudoOperand.t list
+  | Dt of PseudoOperand.t list
+  | Do of PseudoOperand.t list
+  | Resb of PseudoOperand.t list
+  | Resw of PseudoOperand.t list
+  | Resd of PseudoOperand.t list
+  | Resq of PseudoOperand.t list
+  | Rest of PseudoOperand.t list
+  | Reso of PseudoOperand.t list
+  | Resy of PseudoOperand.t list
+  | Incbin of PseudoOperand.t list
+  | Equ of PseudoOperand.t list
+[@@deriving variants]
+
+let pseudo_instr_of_string instr ops =
+  let instr = String.lowercase_ascii instr in
+  match instr with
+  | "dw" -> Dw ops
+  | "dd" -> Dd ops
+  | "dq" -> Dq ops
+  | "ddq" -> Ddq ops
+  | "dt" -> Dt ops
+  | "do" -> Do ops
+  | "resb" -> Resb ops
+  | "resw" -> Resw ops
+  | "resd" -> Resd ops
+  | "resq" -> Resq ops
+  | "rest" -> Rest ops
+  | "reso" -> Reso ops
+  | "resy" -> Resy ops
+  | "incbin" -> Incbin ops
+  | "equ" -> Equ ops
+  | "db" -> Db ops
+  | _ ->
+      raise
+        (Invalid_argument
+           (Printf.sprintf "Unsupported pseudo instruction %s" instr))
 
 type instr =
   | Mov of Operand.t * Operand.t
@@ -179,52 +247,38 @@ type instr =
   | Ret
   | Jnz of label
   | Call of label
-  (* Pseudo instruction *)
-  | Db of Operand.t list
-  | Dw of Operand.t list
-  | Dd of Operand.t list
-  | Dq of Operand.t list
-  | Ddq of Operand.t list
-  | Dt of Operand.t list
-  | Do of Operand.t list
-  | Resb of Operand.t list
-  | Resw of Operand.t list
-  | Resd of Operand.t list
-  | Resq of Operand.t list
-  | Rest of Operand.t list
-  | Reso of Operand.t list
-  | Resy of Operand.t list
-  | Incbin of Operand.t list
-  | Equ of Operand.t list
 [@@deriving variants]
+
+let string_of_pseudo_instr instr =
+  match instr with
+  | Db ops -> Printf.sprintf "db %s" (PseudoOperand.string_of_ts ops)
+  | Dw ops -> Printf.sprintf "dw %s" (PseudoOperand.string_of_ts ops)
+  | Dd ops -> Printf.sprintf "dd %s" (PseudoOperand.string_of_ts ops)
+  | Dq ops -> Printf.sprintf "dq %s" (PseudoOperand.string_of_ts ops)
+  | Ddq ops -> Printf.sprintf "ddq %s" (PseudoOperand.string_of_ts ops)
+  | Dt ops -> Printf.sprintf "dt %s" (PseudoOperand.string_of_ts ops)
+  | Do ops -> Printf.sprintf "do %s" (PseudoOperand.string_of_ts ops)
+  | Resb ops -> Printf.sprintf "resb %s" (PseudoOperand.string_of_ts ops)
+  | Resw ops -> Printf.sprintf "resw %s" (PseudoOperand.string_of_ts ops)
+  | Resd ops -> Printf.sprintf "resd %s" (PseudoOperand.string_of_ts ops)
+  | Resq ops -> Printf.sprintf "resq %s" (PseudoOperand.string_of_ts ops)
+  | Rest ops -> Printf.sprintf "rest %s" (PseudoOperand.string_of_ts ops)
+  | Reso ops -> Printf.sprintf "reso %s" (PseudoOperand.string_of_ts ops)
+  | Resy ops -> Printf.sprintf "resy %s" (PseudoOperand.string_of_ts ops)
+  | Incbin ops -> Printf.sprintf "incbin %s" (PseudoOperand.string_of_ts ops)
+  | Equ ops -> Printf.sprintf "equ %s" (PseudoOperand.string_of_ts ops)
 
 let instr_of_string instr ops =
   let instr = String.lowercase_ascii instr in
   match instr with
-  | "dw" -> Dw ops
-  | "dd" -> Dd ops
-  | "dq" -> Dq ops
-  | "ddq" -> Ddq ops
-  | "dt" -> Dt ops
-  | "do" -> Do ops
-  | "resb" -> Resb ops
-  | "resw" -> Resw ops
-  | "resd" -> Resd ops
-  | "resq" -> Resq ops
-  | "rest" -> Rest ops
-  | "reso" -> Reso ops
-  | "resy" -> Resy ops
-  | "incbin" -> Incbin ops
-  | "equ" -> Equ ops
-  | "db" -> Db ops
   | "jnz" ->
       assert_length ops 1 ;
       let r1 = List.nth ops 0 in
-      Jnz (Option.get @@ Operand.s_val r1)
+      Jnz (Option.get @@ Operand.l_val r1)
   | "call" ->
       assert_length ops 1 ;
       let r1 = List.nth ops 0 in
-      Call (Option.get @@ Operand.s_val r1)
+      Call (Option.get @@ Operand.l_val r1)
   | "push" ->
       assert_length ops 1 ;
       let r1 = List.nth ops 0 in
@@ -252,7 +306,7 @@ let instr_of_string instr ops =
       let r1 = List.nth ops 0 in
       let r2 = List.nth ops 1 in
       Xor (r1, r2)
-  | "Inc" ->
+  | "inc" ->
       assert_length ops 1 ;
       let r1 = List.nth ops 0 in
       Inc r1
@@ -351,29 +405,13 @@ let string_of_instr = function
   | Int op -> Printf.sprintf "int %s" (Operand.string_of_t op)
   | Pop r -> Printf.sprintf "pop %s" (string_of_register r)
   | Push r -> Printf.sprintf "push %s" (string_of_register r)
-  (* Pseudo instruction *)
-  | Db ops -> Printf.sprintf "db %s" (Operand.string_of_ts ops)
-  | Dw ops -> Printf.sprintf "dw %s" (Operand.string_of_ts ops)
-  | Dd ops -> Printf.sprintf "dd %s" (Operand.string_of_ts ops)
-  | Dq ops -> Printf.sprintf "dq %s" (Operand.string_of_ts ops)
-  | Ddq ops -> Printf.sprintf "ddq %s" (Operand.string_of_ts ops)
-  | Dt ops -> Printf.sprintf "dt %s" (Operand.string_of_ts ops)
-  | Do ops -> Printf.sprintf "do %s" (Operand.string_of_ts ops)
-  | Resb ops -> Printf.sprintf "resb %s" (Operand.string_of_ts ops)
-  | Resw ops -> Printf.sprintf "resw %s" (Operand.string_of_ts ops)
-  | Resd ops -> Printf.sprintf "resd %s" (Operand.string_of_ts ops)
-  | Resq ops -> Printf.sprintf "resq %s" (Operand.string_of_ts ops)
-  | Rest ops -> Printf.sprintf "rest %s" (Operand.string_of_ts ops)
-  | Reso ops -> Printf.sprintf "reso %s" (Operand.string_of_ts ops)
-  | Resy ops -> Printf.sprintf "resy %s" (Operand.string_of_ts ops)
-  | Incbin ops -> Printf.sprintf "incbin %s" (Operand.string_of_ts ops)
-  | Equ ops -> Printf.sprintf "equ %s" (Operand.string_of_ts ops)
 
 type line =
   | Extern of symbol
   | Global of label
   | Section of section
   | LInstr of label * instr
+  | PseudoInstr of label * pseudo_instr
   | Instr of instr
 
 type prog = line list
@@ -383,6 +421,8 @@ let string_of_line = function
   | Global s -> Printf.sprintf "  global %s" s
   | Section s -> Printf.sprintf "  section %s" (string_of_section s)
   | LInstr (lbl, instr) -> Printf.sprintf "%s: %s" lbl (string_of_instr instr)
+  | PseudoInstr (lbl, instr) ->
+      Printf.sprintf "%s: %s" lbl (string_of_pseudo_instr instr)
   | Instr instr -> Printf.sprintf "  %s" (string_of_instr instr)
 
 let print_prog prog =

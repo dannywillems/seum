@@ -16,6 +16,7 @@
 %token LEFT_PAREN
 %token RIGHT_PAREN
 %token PLUS
+%token TIMES
 %token MINUS
 %token DOLLAR
 %token OPENING_SQUARE_BRACKET
@@ -31,6 +32,7 @@
 %token GLOBAL
 %token EXTERN
 %token <string> INSTRUCTION
+%token <string> PSEUDO_INSTRUCTION
 %token NEW_LINE
 
 (* TODO: split register in 64BITS, 32BITS, etc *)
@@ -85,7 +87,18 @@ nasm_line:
       in
       print_endline (Seum.string_of_line ret);
       ret
-
+    }
+| label = LABEL ;
+  option(COLON) ;
+  instr = pseudo_instruction ;
+  ops = separated_list(COMMA, pseudo_operand) ;
+  NEW_LINE {
+      let instr = Seum.pseudo_instr_of_string instr ops in
+      let ret =
+        Seum.PseudoInstr (label, instr)
+      in
+      print_endline (Seum.string_of_line ret);
+      ret
     }
 | label = LABEL ;
   COLON ;
@@ -109,6 +122,11 @@ address:
              Seum.Address.Sub (add1, add2)
            }
 | add1 = address ;
+  TIMES ;
+  add2 = address {
+             Seum.Address.Times (add1, add2)
+           }
+| add1 = address ;
   PLUS ;
   add2 = address {
              Seum.Address.Add (add1, add2)
@@ -116,9 +134,6 @@ address:
 | reg = REGISTER {
              Seum.Address.R (Seum.register_of_string reg)
            }
-| a = HEX_STRING {
-            Seum.Address.S a
-          }
 | lbl = LABEL {
           Seum.Address.L lbl
         }
@@ -126,29 +141,41 @@ address:
   Seum.Address.Current
 }
 
-(* TODO: add hex integers *)
-operand:
-  | reg_name = REGISTER {
-                   Seum.Operand.R (Seum.register_of_string reg_name) }
+pseudo_instruction:
+| instr = PSEUDO_INSTRUCTION { instr }
+
+pseudo_operand:
 | int = INTEGER {
-            printf "Parser op/int: %d\n" int ; Seum.Operand.I int
+            printf "Parser op/int: %d\n" int ; Seum.PseudoOperand.C (Seum.Int int)
           }
 | hex = HEX_STRING {
-            printf "Parser op/hex: %s\n" hex ; Seum.Operand.H hex
+            printf "Parser op/hex: %s\n" hex ; Seum.PseudoOperand.C (Seum.Hexadecimal (`Hex hex))
           }
-| f = FLOAT {
-          printf "Parser op/float: %f\n" f ; Seum.Operand.F f
-        }
-| op = LABEL {
-           printf "Parser op/label: %s\n" op ; Seum.Operand.S op
+| str = STRING {
+            printf "Parser op/str: %s\n" str ; Seum.PseudoOperand.C (Seum.String str)
+          }
+| addr = address {
+      Seum.PseudoOperand.E addr
+    }
+
+(* TODO: add hex integers *)
+operand:
+| reg_name = REGISTER {
+                  Seum.Operand.R (Seum.register_of_string reg_name) }
+| int = INTEGER {
+            printf "Parser op/int: %d\n" int ; Seum.Operand.C (Seum.Int int)
+          }
+| hex = HEX_STRING {
+            printf "Parser op/hex: %s\n" hex ; Seum.Operand.C (Seum.Hexadecimal (`Hex hex))
+          }
+| str = STRING {
+            printf "Parser op/str: %s\n" str ; Seum.Operand.C (Seum.String str)
+          }
+| lbl = LABEL {
+           printf "Parser op/label: %s\n" lbl ; Seum.Operand.L lbl
          }
-| op = STRING {
-           let op = Printf.sprintf "\"%s\"" op in Seum.Operand.S op
-         }
-| addr = address { Seum.Operand.A addr }
 | OPENING_SQUARE_BRACKET ;
-  addr = operand ;
+  addr = address ;
   CLOSING_SQUARE_BRACKET {
-      assert (not (Seum.Operand.is_d addr));
-      Seum.Operand.D addr
+      Seum.Operand.E addr
     }

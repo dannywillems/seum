@@ -2,5 +2,6 @@
  (name seum)
  (public_name seum)
  (modules seum seum_basic)
- (preprocess (pps ppx_deriving.show ppx_variants_conv))
- (libraries integers))
+ (preprocess
+  (pps ppx_deriving.show ppx_variants_conv))
+ (libraries integers hex))

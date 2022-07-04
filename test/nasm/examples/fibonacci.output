@@ -20,7 +20,7 @@ print: push rax
   dec ecx
   jnz print
   pop rbx
-  ret 
+  ret
   section .data
 format: db "%20ld", 10, 0
 n: dw 0x10

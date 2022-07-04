@@ -296,6 +296,11 @@ rule prog = parse
     empty_line := false;
     Parser.DOLLAR
   }
+  | "*" {
+    print_endline "TIMES";
+    empty_line := false;
+    Parser.TIMES
+  }
   | "," {
       print_endline "COMMA";
       empty_line := false;
@@ -335,7 +340,7 @@ rule prog = parse
       empty_line := false;
       if is_instruction ident then (Parser.INSTRUCTION ident)
       else if is_register ident then (Parser.REGISTER ident)
-      else if is_pseudo_instruction ident then (Parser.INSTRUCTION ident)
+      else if is_pseudo_instruction ident then (Parser.PSEUDO_INSTRUCTION ident)
       (* TODO: add check on the valid syntax for labels *)
       else (
         let label_length = String.length ident in
