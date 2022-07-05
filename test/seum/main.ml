@@ -16,7 +16,7 @@ let check_dsl filename prog () =
 let maxofthree_prog : Seum.prog =
   let open Seum in
   let maxofthree = label "maxofthree" in
-  let open Seum.Operand in
+  let open Seum.Instruction.Operand in
    (maxofthree |: mov rax rdi)
    ^> mov rax rsi
    ^> cmovl rax rsi
@@ -28,20 +28,20 @@ let print_prog : Seum.prog =
   let open Seum in
   let main = label "main" in
   let puts = label "puts" in
-  let open Seum.Operand in
   let open Seum.Address in
+  let open Seum.Instruction.Operand in
      global main
   ^> extern puts
   ^> section_text
   ^> (main |: push rdi)
   ^> push rsi
-  ^> sub rsp (Seum.Operand.int 8)
+  ^> sub rsp (int 8)
   ^> mov rdi !(rsi_)
   ^> call puts
-  ^> add rsp (Seum.Operand.int 8)
+  ^> add rsp (int 8)
   ^> pop rsi
   ^> pop rdi
-  ^> add rsi (Seum.Operand.int 8)
+  ^> add rsi (int 8)
   ^> dec rdi
   ^> jnz main
   ^- ret
