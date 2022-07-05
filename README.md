@@ -28,6 +28,32 @@ has never to write assembly in a different file and can threat assembly code
 like pure OCaml functions.
 
 
+## Example:
+
+```ocaml
+let print_prog : Seum.prog =
+  let open Seum in
+  let main = label "main" in
+  let puts = label "puts" in
+  let open Seum.Address in
+  let open Seum.Instruction.Operand in
+     global main
+  ^> extern puts
+  ^> section_text
+  ^> (main |: push rdi)
+  ^> push rsi
+  ^> sub rsp (int 8)
+  ^> mov rdi !(rsi_)
+  ^> call puts
+  ^> add rsp (int 8)
+  ^> pop rsi
+  ^> pop rdi
+  ^> add rsi (int 8)
+  ^> dec rdi
+  ^> jnz main
+  ^- ret
+```
+
 ## Install
 
 Parsers and internal tools are shipped into different packages. Each assembler
@@ -50,6 +76,10 @@ Brainstorming for first release:
 - [x] Simple programs using mov, add, registers, stack ops.
 - [x] NASM parser for the simple programs.
 - [x] Write assembly programs and dump them into a file
+- [ ] Registers should not be simply a variant with only tags. We must be able
+      to threat a type `Seum.prog` as a function, taking inputs. With this idea,
+      we can test directly the code and threat the assembly as a normal OCaml
+      function.
 - [ ] Cost model: encode the cost of an instruction (CPU cycle, number of registers
   used, etc). Also, count the number of memory access.
 - [ ] Compare programs based on a cost model
