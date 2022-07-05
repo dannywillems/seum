@@ -22,7 +22,11 @@ implemented counting the number of CPU cycle each instruction requires in
 addition to counting the number of memory accesses and registers used, providing
 more precise comparisons of algorithm implementations.
 Additionnally, using the embedded syntax, OCaml bindings to the assembly code can be
-automatically generated.
+automatically generated. Calling the assembly code directly from OCaml like any
+other function should also be possible and straightforward. The OCaml developer
+has never to write assembly in a different file and can threat assembly code
+like pure OCaml functions.
+
 
 ## Install
 
